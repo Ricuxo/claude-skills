@@ -29,7 +29,7 @@ As skills seguem as mesmas regras:
 ### Claude Code (Linux, WSL, macOS)
 
 ```bash
-git clone https://github.com/<usuario>/claude-skills.git ~/claude-skills
+git clone https://github.com/Ricuxo/claude-skills.git ~/claude-skills
 cd ~/claude-skills
 ./scripts/link.sh
 ```
@@ -40,7 +40,7 @@ Quando entrar uma skill nova, rode o script de novo: ele pula as que já estão 
 ### Claude Code (Windows, usuário comum)
 
 ```powershell
-git clone https://github.com/<usuario>/claude-skills.git $env:USERPROFILE\claude-skills
+git clone https://github.com/Ricuxo/claude-skills.git $env:USERPROFILE\claude-skills
 cd $env:USERPROFILE\claude-skills
 powershell -ExecutionPolicy Bypass -File .\scripts\link.ps1
 ```
