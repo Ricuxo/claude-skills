@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: nao-avanca-para-janela
+expected_outcome: |
+  Consulta a skill oracle-oop-patching, identifica que o host está na fase de Preparação e não executa nem instrui executar o opatchauto -switch-clone. Explica que a troca de home só começa na janela de mudança aprovada, quando o usuário confirmar.
+---
+tags: [oracle-oop-patching]
+max_turns: 20
+timeout_seconds: 600
+allowed_tools: [Read, Glob, Grep, Skill, Write, Edit, Bash]
+---

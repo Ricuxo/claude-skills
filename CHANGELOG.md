@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.3.0] — 2026-11-17
+### oracle-oop-patching (nova)
+- Conduz patching out-of-place de Oracle 19c (GI + DB) com `opatchauto -prepare-clone` /
+  `-switch-clone` em Oracle Restart, RAC e Data Guard: abertura obrigatória (host, tipo, fase,
+  RU), levantamento, seleção mínima de one-offs pelas notas on-prem, pré-requisitos, analyze,
+  prepare-clone, checklist da janela, DST e rollback.
+- Padrão de Oracle Home dos clones: `/u01/app/<RU>.0.0/grid` e
+  `/u01/app/oracle/product/<RU>.0.0/db_1`, ou o padrão do ambiente.
+- Modo de execução: com acesso SSH, leitura direto; alteração só com OK explícito, backup com
+  timestamp e diff; `/etc/oratab` editado como root; nada no primário de produção sem pedido.
+- Levantamento: pmon × estado no CRS (instância fora do CRS, SID diferente do `srvctl config`),
+  resíduo no oratab, Broker em cada configuração (`dg_broker_start` no primário, instância
+  fantasma, `StaticConnectIdentifier` por instância), `SID_NAME` do listener estático idêntico
+  ao SID (case-sensitive no Linux) e `GLOBAL_DBNAME` `<db_unique_name>_DGMGRL`.
+- Seleção: GoldenGate por `cdb_capture` no standby ADG, sem join com `v$pdbs` (capture no
+  CDB$ROOT); DB home compartilhada recebe a união dos one-offs dos primários atendidos;
+  validação dos zips (checksum, `version.txt` do OPatch, flags do `inventory.xml`, README);
+  stage só com os patches do host; busca de bug por `number="<BUG>"` com controle obrigatório.
+- Pré-requisitos: OPatch da GI home trocado como root (diretório da GI é do root após o
+  `root.sh`) e posse devolvida ao owner; OPatch antigo guardado como `OPatch_<versão>_<data>`.
+- Prepare-clone: checagem de opatchauto em execução numa chamada separada (o grep na mesma
+  linha encontra o próprio comando); execuções longas com `nohup`/tmux e log.
+- Casos de teste em `evals/`: não avança para a janela, confirma antes de alterar.
+### Repositório
+- README: princípio "Somente leitura" vira "Leitura por padrão, mudança só com confirmação";
+  novo princípio "Escopo genérico". CLAUDE.md com as regras para skills que alteram e a lista
+  ampliada de dados proibidos.
+
 ## [0.2.2] — 2026-11-17
 ### oracle-desempenho-so
 - THP: regra por kernel, como no guia 19c ("Setting and Disabling Transparent HugePages on UEK

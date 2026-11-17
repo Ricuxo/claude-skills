@@ -12,8 +12,13 @@ o Claude Code lê `~/.claude/skills`, que aponta para `skills/` por symlink ou j
 - Cada skill é autocontida: uma não lê o `references/` da outra. Duplicar consulta é aceitável.
 - Skills de diagnóstico são somente leitura. Nenhuma instrução de ALTER, DDL ou mudança
   de sysctl dentro da coleta; mudança só como recomendação, marcada como tal.
-- Nunca incluir hostnames, nomes de conexão, IPs, usuários, senhas ou dado de cliente,
-  nem em exemplos.
+- Skills que conduzem mudança (ex.: patching) executam leitura direto, mas cada alteração
+  exige: mostrar comando, impacto e rollback; confirmação explícita; backup com timestamp
+  (`<arquivo>.bak_YYYYMMDD_HHMMSS`) antes e `diff` depois.
+- Escopo genérico: nunca incluir hostnames, domínios, IPs, nomes de banco, PDB, serviço ou
+  conexão, usuários, senhas, e-mails, nomes de empresa ou cliente, CSI, nem ferramentas
+  pessoais ou internas (Obsidian, Google Drive, pastas de blog, monitoração específica),
+  nem em exemplos ou evals. Use placeholders. Antes do commit, rode um grep de dados sensíveis.
 - Toda mudança de comportamento entra no `CHANGELOG.md`.
 
 ## Testes

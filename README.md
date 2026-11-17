@@ -9,6 +9,7 @@ administração em Linux, passo a passo, sempre contra a documentação oficial 
 |---|---|
 | [`oracle-prereq-so`](skills/oracle-prereq-so/SKILL.md) | Confere se um servidor Linux está pronto para instalar Oracle 19c, 21c ou 23ai/26ai (Single Instance, Oracle Restart ou RAC; filesystem ou ASM). Compara SO, kernel, pacotes, sysctl, limits, memória, swap, HugePages, THP e storage com o guia de instalação da versão, lido na hora |
 | [`oracle-desempenho-so`](skills/oracle-desempenho-so/SKILL.md) | Analisa desempenho de banco Oracle na camada de SO e infraestrutura: CPU, memória, HugePages, I/O, rede e interconnect de RAC. Interpreta `vmstat`, `iostat`, `sar` e os eventos de espera ligados a I/O |
+| [`oracle-oop-patching`](skills/oracle-oop-patching/SKILL.md) | Conduz o patching out-of-place de Oracle 19c (GI e DB) com `opatchauto -prepare-clone` / `-switch-clone`, em Oracle Restart, RAC e Data Guard: levantamento do host, seleção mínima de one-offs, pré-requisitos, analyze, preparação dos clones sem downtime, checklist da janela de troca, DST e rollback |
 
 ## Princípios
 
@@ -17,8 +18,15 @@ As skills seguem as mesmas regras:
 - **Doc oficial como fonte.** Nenhum valor exigido sai de memória. Cada requisito vem da
   documentação da versão alvo, com o link da página. Se a página não abre, o item fica como
   **NÃO VERIFICADO**, e a skill não preenche o valor por conta própria.
-- **Somente leitura.** As skills coletam e comparam. Não aplicam fixup, `sysctl -w`, pacote,
-  usuário nem regra udev. Mudança aparece só como recomendação, com a fonte, para o DBA decidir.
+- **Leitura por padrão, mudança só com confirmação.** A maioria das skills (diagnóstico e
+  pré-requisitos) só coleta e compara. Elas não aplicam fixup, `sysctl -w`, pacote, usuário nem
+  regra udev; a correção aparece como recomendação, com a fonte, para o DBA decidir. As skills
+  que conduzem uma mudança, como o patching, fazem as verificações de leitura direto. Antes de
+  qualquer alteração, elas mostram o comando, o impacto e como desfazer, fazem backup do que vão
+  mudar e só seguem com a confirmação explícita de quem está conduzindo.
+- **Escopo genérico.** Nenhuma skill traz hostname, IP, domínio, nome de banco ou de conexão,
+  usuário, empresa ou ferramenta interna, nem em exemplos. Os exemplos usam placeholders
+  (`<host>`, `<db_unique_name>`, `<HOME>`), para servir a qualquer ambiente.
 - **Sem bypass.** Requisito não atendido se corrige no servidor. As skills nunca recomendam
   `-ignorePrereq` nem aceitar o item como exceção.
 - **Sem senha na conversa.** O acesso ao servidor é por chave SSH que já existe
