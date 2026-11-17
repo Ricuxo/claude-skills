@@ -51,3 +51,7 @@ Skill nova: rode o script de link de novo — ele pula as já ligadas.
 | Skill | Escopo |
 |---|---|
 | `oracle-desempenho-so` | Nível 1 — SO e infraestrutura (CPU, memória, I/O, rede, ASM, interconnect) |
+
+## Licença
+
+MIT. Veja `LICENSE`.

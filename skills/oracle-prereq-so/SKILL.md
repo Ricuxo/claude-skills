@@ -67,7 +67,7 @@ oracle-prereq-so <alvo> <versão> <cenário> <storage> [fase]
             confirmacao depois da preparação: todos os itens
             auditoria  Oracle já instalado: todos os itens
             (omitida: deduzida pelo servidor)
-ex.: /oracle-prereq-so 192.0.2.10 19c restart asm
+ex.: /oracle-prereq-so <ip> 19c restart asm
 ```
 
 **Dono do software:** padrão é **um único usuário, `oracle`**, dono do Database e do Grid.
