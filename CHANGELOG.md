@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2] — 2026-11-17
+### oracle-desempenho-so
+- THP: regra por kernel, como no guia 19c ("Setting and Disabling Transparent HugePages on UEK
+  Kernels"): `madvise` em UEK7 ou mais novo, `never` antes. Antes a skill mandava desabilitar
+  sempre e marcava como problema o `madvise` que a doc recomenda. O achado passa a ser THP em
+  `always`. A coleta mostra o kernel e o valor esperado por kernel.
+
 ## [0.2.1] — 2026-11-17
 ### oracle-desempenho-so
 - `SKILL.md` de 581 para 488 linhas (regra do repositório: ~500). O SQL da janela curta

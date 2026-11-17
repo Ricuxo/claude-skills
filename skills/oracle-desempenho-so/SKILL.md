@@ -297,8 +297,13 @@ Quatro coisas que valem mais do que parecem:
   HugePages não é usada — muito ambiente tem HugePages configurada no SO e inativa por isso.
 - `use_large_pages = ONLY` faz a instância se recusar a subir sem HugePages, o que ao menos
   torna o problema visível.
-- **Transparent HugePages deve estar desabilitado** (recomendação Oracle). THP ativo causa
-  travamentos intermitentes por compactação de memória no kernel, que parecem problema de storage.
+- **Transparent HugePages: a regra depende do kernel.** Em UEK7 ou mais novo, a Oracle recomenda
+  `madvise`; em UEK anterior ao UEK7, desabilitar (`never`). Fonte: "Setting and Disabling
+  Transparent HugePages on UEK Kernels", no guia de instalação da versão (`ladbi`). A página
+  genérica "Restrictions for HugePages and Transparent HugePages Configurations" ainda manda
+  desabilitar sempre: cite as duas e use a do kernel. Em qualquer kernel, `always` está fora da
+  recomendação. THP em `always` causa travamentos intermitentes por compactação de memória no
+  kernel, que parecem problema de storage.
 
 ---
 
@@ -429,7 +434,7 @@ Quase tudo neste nível é sintoma. Procure especificamente:
 - **Swap em uso ou OOM killer no `dmesg`** — crítico. Diga isso com clareza; nenhum tuning compensa.
 - **`over allocation count` > 0 com TEMP alta** — PGA subdimensionada, custo aparecendo como I/O.
 - **`memory_target` setado com HugePages no SO** — HugePages inativa.
-- **THP habilitado** — fonte provável de travamentos intermitentes.
+- **THP em `always`** — fonte provável de travamentos intermitentes (`madvise` em UEK7+ está certo; ver 5.4).
 - **`db file sequential read` acima de 10 ms** — storage lento *ou* cache pequeno gerando leituras
   que não deveriam existir. O histograma e o volume separam as duas causas.
 - **Cauda ruim no histograma com média boa** — problema intermitente de storage; o achado que

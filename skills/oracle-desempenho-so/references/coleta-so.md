@@ -21,7 +21,8 @@ top -b -n 1 -o %CPU | head -25
 free -m                                    # 'available' importa, não 'free'
 egrep -i 'MemTotal|MemAvailable|SwapTotal|SwapFree|Huge|PageTables' /proc/meminfo
 cat /proc/sys/vm/swappiness                # em servidor de banco: baixo (1–10)
-cat /sys/kernel/mm/transparent_hugepage/enabled   # esperado: [never]
+uname -r                                   # a regra do THP depende do kernel (UEK7+ ou anterior)
+cat /sys/kernel/mm/transparent_hugepage/enabled   # esperado: [madvise] em UEK7+, [never] antes (ver 5.4)
 cat /sys/kernel/mm/transparent_hugepage/defrag
 dmesg -T | grep -iE 'oom|out of memory|killed process|hung_task'
 ```
