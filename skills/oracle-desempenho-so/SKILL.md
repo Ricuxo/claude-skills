@@ -128,29 +128,9 @@ Valores em centésimos de segundo, somados em todas as CPUs.
 `%CPU ocupada = Δbusy / (Δbusy + Δidle) × 100`. Mesmo método para `V$SYSTEM_EVENT`,
 `V$SYSSTAT` e `V$SYS_TIME_MODEL` sempre que precisar de taxa.
 
-**Janela curta pronta.** `V$SYSMETRIC` (`group_id = 2`) entrega taxas do último minuto:
-
-```sql
-SELECT metric_name, ROUND(value,2) AS valor, metric_unit,
-       TO_CHAR(begin_time,'HH24:MI:SS') AS inicio, TO_CHAR(end_time,'HH24:MI:SS') AS fim
-  FROM v$sysmetric
- WHERE group_id = 2
-   AND metric_name IN ('Host CPU Utilization (%)','CPU Usage Per Sec','Database CPU Time Ratio',
-       'Database Wait Time Ratio','Average Active Sessions','Current OS Load',
-       'Physical Read Total IO Requests Per Sec','Physical Write Total IO Requests Per Sec',
-       'I/O Megabytes per Second','I/O Requests per Second','Redo Generated Per Sec',
-       'Logons Per Sec','User Transaction Per Sec','Executions Per Sec')
- ORDER BY metric_name
-```
-
-`V$SYSMETRIC_HISTORY` guarda cerca de uma hora, minuto a minuto:
-
-```sql
-SELECT TO_CHAR(end_time,'HH24:MI') AS minuto, ROUND(value,2) AS valor
-  FROM v$sysmetric_history
- WHERE metric_name = 'Host CPU Utilization (%)' AND group_id = 2
- ORDER BY end_time
-```
+**Janela curta pronta.** `V$SYSMETRIC` (`group_id = 2`) entrega taxas do último minuto, e
+`V$SYSMETRIC_HISTORY` guarda cerca de uma hora, minuto a minuto. As consultas estão em
+`references/consultas.md` (seção Passo 3): **leia-o** quando precisar de taxa sem fazer delta manual.
 
 Ressalva para dizer ao usuário: as views `V$SYSMETRIC*` são populadas pelo MMON, a mesma
 infraestrutura do AWR, e há auditores que as tratam como área cinzenta. Contadores puros
@@ -290,20 +270,8 @@ SELECT name, CASE WHEN unit='bytes' THEN ROUND(value/1048576,2) ELSE value END A
 ```
 
 `over allocation count` > 0: o Oracle alocou além do alvo, PGA subdimensionada.
-`cache hit percentage` abaixo de ~90%: sorts e hash joins indo para o TEMP. Consumo atual:
-
-```sql
-SELECT s.username, s.sid, s.program, u.tablespace,
-       ROUND(SUM(u.blocks * t.block_size)/1048576,2) AS temp_mb,
-       MAX(u.segtype) AS tipo, MAX(u.sql_id) AS sql_id
-  FROM v$tempseg_usage u
-  JOIN v$session s ON s.saddr = u.session_addr
-  JOIN dba_tablespaces t ON t.tablespace_name = u.tablespace
- GROUP BY s.username, s.sid, s.program, u.tablespace
- ORDER BY temp_mb DESC
-```
-
-Em CDB, rode no PDB da aplicação (no root, `DBA_TABLESPACES` não enxerga a TEMP do PDB).
+`cache hit percentage` abaixo de ~90%: sorts e hash joins indo para o TEMP. Para ver quem
+consome o TEMP agora, use a consulta por sessão de `references/consultas.md` (seção Passo 5.3).
 
 ### 5.4 HugePages e Transparent HugePages (Linux)
 
@@ -336,20 +304,12 @@ Quatro coisas que valem mais do que parecem:
 
 ## Passo 6 — I/O
 
+**Leia `references/consultas.md`** (seções do Passo 6) ao entrar neste passo: o SQL de cada
+verificação abaixo está lá, e a interpretação fica aqui.
+
 ### 6.1 Latência percebida pelo banco
 
-O número mais importante deste nível:
-
-```sql
-SELECT event, total_waits, ROUND(time_waited_micro/1000000,2) AS seg_total,
-       ROUND(time_waited_micro/NULLIF(total_waits,0)/1000,2) AS ms_medio, wait_class
-  FROM v$system_event
- WHERE event IN ('db file sequential read','db file scattered read','db file parallel read',
-                 'direct path read','direct path read temp','direct path write','direct path write temp',
-                 'log file parallel write','log file sync','control file sequential read',
-                 'db file async I/O submit')
- ORDER BY time_waited_micro DESC
-```
+O número mais importante deste nível: a média por evento de `V$SYSTEM_EVENT`.
 
 `db file sequential read` (bloco único, quase sempre por índice) é a melhor aproximação da
 latência do storage. Referências: abaixo de 1 ms = flash ou cache do storage; 2 a 6 ms = disco
@@ -360,69 +320,20 @@ write, o storage do redo não é o problema — é commit excessivo da aplicaç�
 atrasando o LGWR ou o LGWR perdendo prioridade no SO. `log file parallel write` saudável fica
 abaixo de ~2 ms em flash e ~5 ms em disco.
 
-A média esconde a cauda. Distribuição:
-
-```sql
-SELECT event, wait_time_milli AS ate_ms, wait_count,
-       ROUND(RATIO_TO_REPORT(wait_count) OVER (PARTITION BY event)*100,2) AS pct
-  FROM v$event_histogram
- WHERE event IN ('db file sequential read','log file parallel write','log file sync')
- ORDER BY event, wait_time_milli
-```
-
-Em flash/NVMe quase tudo cai no balde de 1 ms; use a versão em microssegundos (12.1.0.2+):
-
-```sql
-SELECT event, wait_time_format, wait_count
-  FROM v$event_histogram_micro
- WHERE event IN ('db file sequential read','log file parallel write')
- ORDER BY event, wait_time_micro
-```
+A média esconde a cauda: olhe a distribuição em `V$EVENT_HISTOGRAM`. Em flash/NVMe quase tudo
+cai no balde de 1 ms; use `V$EVENT_HISTOGRAM_MICRO` (12.1.0.2+).
 
 95% em 1 ms e 2% acima de 64 ms = problema intermitente de storage que nenhuma média revela —
 e são esses 2% que o usuário sente.
 
 ### 6.2 Distribuição por arquivo
 
-```sql
-SELECT d.name AS arquivo, t.name AS tablespace, f.phyrds, f.phywrts,
-       ROUND(f.phyblkrd * d.block_size/1073741824,2) AS gb_lidos,
-       f.singleblkrds,
-       ROUND(f.singleblkrdtim*10/NULLIF(f.singleblkrds,0),2) AS ms_bloco_unico,
-       ROUND(f.readtim*10/NULLIF(f.phyrds,0),2) AS ms_leitura_media,
-       ROUND(f.writetim*10/NULLIF(f.phywrts,0),2) AS ms_escrita_media
-  FROM v$filestat f JOIN v$datafile d ON d.file# = f.file#
-  JOIN v$tablespace t ON t.ts# = d.ts#
- ORDER BY f.phyrds + f.phywrts DESC
-```
-
-```sql
-SELECT tf.name AS tempfile, ts.phyrds, ts.phywrts,
-       ROUND(ts.readtim*10/NULLIF(ts.phyrds,0),2) AS ms_leitura,
-       ROUND(ts.writetim*10/NULLIF(ts.phywrts,0),2) AS ms_escrita
-  FROM v$tempstat ts JOIN v$tempfile tf ON tf.file# = ts.file#
- ORDER BY ts.phyrds + ts.phywrts DESC
-```
-
-Tempos em centésimos de segundo (daí o `*10`). Um datafile com 60% das leituras sozinho num
+`V$FILESTAT` (datafiles) e `V$TEMPSTAT` (tempfiles). Um datafile com 60% das leituras sozinho num
 mount point = gargalo físico e ponto único de falha.
 
 ### 6.3 Quem gera o I/O (11g+)
 
-```sql
-SELECT function_name,
-       ROUND((small_read_megabytes+large_read_megabytes)/1024,2) AS gb_lidos,
-       ROUND((small_write_megabytes+large_write_megabytes)/1024,2) AS gb_escritos,
-       small_read_reqs+large_read_reqs AS reqs_leitura,
-       small_write_reqs+large_write_reqs AS reqs_escrita,
-       number_of_waits,
-       ROUND(wait_time/NULLIF(number_of_waits,0),2) AS ms_medio
-  FROM v$iostat_function
- WHERE small_read_megabytes+large_read_megabytes+small_write_megabytes+large_write_megabytes > 0
- ORDER BY small_read_megabytes+large_read_megabytes+small_write_megabytes+large_write_megabytes DESC
-```
-
-Separa buffer cache, direct read, RMAN, archiving, DBWR e LGWR. Descobrir que metade do I/O é
+`V$IOSTAT_FUNCTION` separa buffer cache, direct read, RMAN, archiving, DBWR e LGWR. Descobrir que metade do I/O é
 do RMAN em horário comercial resolve mais "storage lento" do que qualquer tuning.
 
 ### 6.4 ASM
@@ -432,12 +343,8 @@ diskgroup. Um disco com latência muito acima dos irmãos = LUN ou caminho de mu
 
 ### 6.5 Parâmetros de I/O
 
-```sql
-SELECT name, value, isdefault FROM v$parameter
- WHERE name IN ('filesystemio_options','disk_asynch_io','db_file_multiblock_read_count',
-                'db_writer_processes','dbwr_io_slaves','log_archive_max_processes','db_block_size')
- ORDER BY name
-```
+`filesystemio_options`, `disk_asynch_io`, `db_file_multiblock_read_count`, `db_writer_processes`,
+`dbwr_io_slaves`, `log_archive_max_processes` e `db_block_size`, de `V$PARAMETER`.
 
 Em filesystem (não ASM), `filesystemio_options = SETALL` habilita I/O assíncrono e direto; sem
 isso o banco passa pelo page cache do SO, que duplica o cache e desperdiça RAM. Alto retorno,

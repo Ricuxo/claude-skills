@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1] — 2026-11-17
+### oracle-desempenho-so
+- `SKILL.md` de 581 para 488 linhas (regra do repositório: ~500). O SQL da janela curta
+  (`V$SYSMETRIC*`), do TEMP por sessão e do Passo 6 (I/O) foi para `references/consultas.md`,
+  sem alteração; a interpretação continua no `SKILL.md`, com ponteiro dizendo quando ler.
+### Repositório
+- Licença MIT, README para o repositório público e exemplo de uso sem IP.
+
 ## [0.2.0] — 2026-11-12
 ### oracle-prereq-so (nova)
 - Valida pré-requisitos de SO para Oracle (SI, Restart, RAC; FS ou ASM) contra a
