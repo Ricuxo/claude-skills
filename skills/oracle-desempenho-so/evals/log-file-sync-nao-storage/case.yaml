@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: log-file-sync-nao-storage
+expected_outcome: |
+  Explica que, com log file parallel write abaixo de 1 ms, o storage do redo está saudável e o log file sync alto aponta para commit excessivo ou CPU, desaconselhando a troca de storage antes de investigar isso.

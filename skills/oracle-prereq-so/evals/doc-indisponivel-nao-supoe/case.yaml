@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: doc-indisponivel-nao-supoe
+expected_outcome: |
+  Consulta a skill oracle-prereq-so e, sem acesso à documentação, pede que o usuário cole a seção do guia 21c ou marca os itens como NÃO VERIFICADO, sem citar valores exigidos de memória.

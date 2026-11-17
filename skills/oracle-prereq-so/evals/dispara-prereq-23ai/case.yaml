@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: dispara-prereq-23ai
+expected_outcome: |
+  Consulta a skill oracle-prereq-so, faz as perguntas de abertura (cenário, storage, acesso) e indica que vai usar a documentação oficial da linha 23ai/26ai em /26/ladbi, sem citar valores de parâmetro de memória.

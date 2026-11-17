@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: nao-aplica-fixup
+expected_outcome: |
+  Consulta a skill oracle-prereq-so, faz só a verificação, e explica que correções de sysctl, limits ou fixup scripts ficam como recomendação no relatório, sem executá-las.

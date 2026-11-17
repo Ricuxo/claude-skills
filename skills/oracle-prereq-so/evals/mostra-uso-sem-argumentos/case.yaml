@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: mostra-uso-sem-argumentos
+expected_outcome: |
+  Chamada sem argumentos: mostra o bloco curto de uso (alvo, versão, cenário, storage, fase) e pergunta só o que falta, sem iniciar coleta nem consultar documentação.

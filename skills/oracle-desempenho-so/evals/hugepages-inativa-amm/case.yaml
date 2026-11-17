@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: hugepages-inativa-amm
+expected_outcome: |
+  Identifica memory_target (AMM) como causa provável, pede a verificação de memory_target/use_large_pages e do bloco Large Pages Information no alert log, e menciona o limite memlock.

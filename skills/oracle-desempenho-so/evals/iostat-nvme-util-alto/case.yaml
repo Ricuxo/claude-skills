@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: iostat-nvme-util-alto
+expected_outcome: |
+  Explica que %util não indica saturação em NVMe, que a latência de 0,2–0,4 ms e a fila baixa mostram dispositivo saudável, e sugere confirmar pela latência de db file sequential read no banco.
