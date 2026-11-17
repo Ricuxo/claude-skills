@@ -24,6 +24,8 @@
   linha encontra o próprio comando); execuções longas com `nohup`/tmux e log.
 - Casos de teste em `evals/`: não avança para a janela, confirma antes de alterar.
 ### Repositório
+- `scripts/link.ps1` salvo em UTF-8 com BOM: sem BOM, o Windows PowerShell 5.1 lia o arquivo
+  como ANSI e os acentos e o travessão quebravam a sintaxe (*TerminatorExpectedAtEndOfString*).
 - README: princípio "Somente leitura" vira "Leitura por padrão, mudança só com confirmação";
   novo princípio "Escopo genérico". CLAUDE.md com as regras para skills que alteram e a lista
   ampliada de dados proibidos.

@@ -1,4 +1,4 @@
-# Liga cada skill do repositório em %USERPROFILE%\.claude\skills por junction.
+﻿# Liga cada skill do repositório em %USERPROFILE%\.claude\skills por junction.
 # Não exige administrador nem Modo de Desenvolvedor. O repo deve estar em disco local.
 # Uso: powershell -ExecutionPolicy Bypass -File .\scripts\link.ps1
 
