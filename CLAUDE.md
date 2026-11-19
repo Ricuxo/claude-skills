@@ -3,6 +3,40 @@
 Repositório de skills do Claude. Fonte única: o claude.ai recebe os ZIPs de `dist/`,
 o Claude Code lê `~/.claude/skills`, que aponta para `skills/` por symlink ou junction.
 
+## Nomes de skill
+Padrão: `<banco>-<domínio>-<objeto>[-<qualificador>]`. Ex.: `oracle-perf-os`, `mongo-adm-params`.
+- **Idioma:** nome em inglês. `description` e corpo em português, com os termos técnicos do jeito
+  que o usuário digita (`HugePages`, `iostat`, `log file sync`).
+- **Banco:** `oracle`, `mongo`, `postgres`, `mysql`, `sqlserver`.
+- **Domínios** (lista fechada):
+
+  | Domínio | O que entra | Tipo |
+  |---|---|---|
+  | `perf` | diagnóstico de desempenho | somente leitura |
+  | `sec` | auditoria de segurança | somente leitura |
+  | `adm` | administração do dia a dia (parâmetros, usuários, healthcheck) | altera ou só lê, conforme a skill |
+  | `install` | pré-requisito e instalação, uma skill por fase | prereq lê; instalação altera |
+  | `patch` | patching e upgrade | altera |
+  | `ha` | Data Guard, RAC, replica set | conforme a skill |
+  | `bkp` | backup e recovery | conforme a skill |
+
+- **Objetos** (vocabulário fechado; objeto novo entra nesta lista antes de ser usado): `os`, `db`,
+  `instance`, `session`, `sql`, `objects`, `app`, `users`, `params`, `network`, `storage`,
+  `prereq`, `oop`, `healthcheck`.
+- **`sec` × `adm` no mesmo objeto:** `sec` audita, `adm` altera. Ex.: `oracle-sec-users` acha
+  privilégio demais e senha padrão; `oracle-adm-users` cria usuários e concede privilégios.
+- **`install` por fase:** `<banco>-install-prereq` verifica o SO, somente leitura.
+  `<banco>-install-db`/`-gi` conduz a instalação: no primeiro passo confirma o pré-requisito (pelo
+  relatório da prereq, chamando a skill ou, sem ela, com uma checagem mínima embutida, como o
+  `-executePrereqs`/`cluvfy`); no último, verifica o resultado.
+- **Desempenho Oracle em níveis:** `oracle-perf-os` (1), `-instance`, `-session`, `-sql`,
+  `-objects`, `-app`.
+- **Renomear uma skill** muda o diretório, o `name`, as referências nas outras skills, as `tags`
+  dos evals e o `README.md`, e entra no `CHANGELOG.md`. No Claude Code, remova o link antigo com
+  `cmd /c rmdir` (Windows; nunca `Remove-Item -Recurse` em junction) ou `rm` (symlink) e rode de
+  novo o `link.ps1`/`link.sh`. No claude.ai, apague a skill antiga antes de enviar o ZIP novo,
+  senão as duas disputam o mesmo pedido.
+
 ## Ao criar ou editar uma skill
 - O diretório e o `name` do frontmatter são idênticos (minúsculas, hífen, até 64 caracteres).
 - Frontmatter só com `name` e `description`. Nada mais, por portabilidade.

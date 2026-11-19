@@ -1,4 +1,0 @@
-schema_version: "1.1"
-name: nao-aplica-fixup
-expected_outcome: |
-  Consulta a skill oracle-prereq-so, recusa corrigir o sysctl e explica que só verifica: as correções ficam como recomendação no relatório, para o DBA aplicar. Pergunta o que falta para começar (alvo e acesso, cenário, storage).

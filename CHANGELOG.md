@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.6.0] — 2026-11-19
+### Repositório
+- Skills renomeadas para o padrão `<banco>-<domínio>-<objeto>`, com nome em inglês:
+  `oracle-desempenho-so` → `oracle-perf-os`, `oracle-prereq-so` → `oracle-install-prereq`,
+  `oracle-oop-patching` → `oracle-patch-oop`. O conteúdo e as `description` não mudam.
+- Os níveis de desempenho citados passam a `oracle-perf-instance`, `-session`, `-sql`,
+  `-objects` e `-app`. O caso `nao-dispara-desempenho` passa a `nao-dispara-perf`.
+- `CLAUDE.md`: nova seção "Nomes de skill", com padrão, domínios, vocabulário de objetos, a regra
+  `sec` × `adm`, as fases do `install` e o roteiro para renomear.
+- **Ação manual:** no claude.ai, apague as três skills com nome antigo e envie os ZIPs novos. No
+  Claude Code, rode `link.ps1`/`link.sh` de novo. As entradas abaixo mantêm os nomes antigos,
+  por serem histórico.
+
 ## [0.5.1] — 2026-11-19
 ### oracle-desempenho-so
 - Swap: separa swap ocupada (páginas antigas, `si`/`so` zerados, sem alarme) de swap ativa

@@ -7,9 +7,9 @@ administração em Linux, passo a passo, sempre contra a documentação oficial 
 
 | Skill | O que faz |
 |---|---|
-| [`oracle-prereq-so`](skills/oracle-prereq-so/SKILL.md) | Confere se um servidor Linux está pronto para instalar Oracle 19c, 21c ou 23ai/26ai (Single Instance, Oracle Restart ou RAC; filesystem ou ASM). Compara SO, kernel, pacotes, sysctl, limits, memória, swap, HugePages, THP e storage com o guia de instalação da versão, lido na hora |
-| [`oracle-desempenho-so`](skills/oracle-desempenho-so/SKILL.md) | Analisa desempenho de banco Oracle na camada de SO e infraestrutura: CPU, memória, HugePages, I/O, rede e interconnect de RAC. Interpreta `vmstat`, `iostat`, `sar` e os eventos de espera ligados a I/O |
-| [`oracle-oop-patching`](skills/oracle-oop-patching/SKILL.md) | Conduz o patching out-of-place de Oracle 19c (GI e DB) com `opatchauto -prepare-clone` / `-switch-clone`, em Oracle Restart, RAC e Data Guard: levantamento do host, seleção mínima de one-offs, pré-requisitos, analyze, preparação dos clones sem downtime, checklist da janela de troca, DST e rollback |
+| [`oracle-install-prereq`](skills/oracle-install-prereq/SKILL.md) | Confere se um servidor Linux está pronto para instalar Oracle 19c, 21c ou 23ai/26ai (Single Instance, Oracle Restart ou RAC; filesystem ou ASM). Compara SO, kernel, pacotes, sysctl, limits, memória, swap, HugePages, THP e storage com o guia de instalação da versão, lido na hora |
+| [`oracle-perf-os`](skills/oracle-perf-os/SKILL.md) | Analisa desempenho de banco Oracle na camada de SO e infraestrutura: CPU, memória, HugePages, I/O, rede e interconnect de RAC. Interpreta `vmstat`, `iostat`, `sar` e os eventos de espera ligados a I/O |
+| [`oracle-patch-oop`](skills/oracle-patch-oop/SKILL.md) | Conduz o patching out-of-place de Oracle 19c (GI e DB) com `opatchauto -prepare-clone` / `-switch-clone`, em Oracle Restart, RAC e Data Guard: levantamento do host, seleção mínima de one-offs, pré-requisitos, analyze, preparação dos clones sem downtime, checklist da janela de troca, DST e rollback |
 
 ## Princípios
 
@@ -72,10 +72,10 @@ As skills disparam pelo assunto da conversa ("o servidor está pronto para o Ora
 banco está lento e a CPU está alta"). Também dá para chamar pelo nome, no Claude Code:
 
 ```
-/oracle-prereq-so <ip> 19c restart asm
+/oracle-install-prereq <ip> 19c restart asm
 ```
 
-Chamada sem argumentos, a `oracle-prereq-so` mostra as opções e pergunta o que faltar.
+Chamada sem argumentos, a `oracle-install-prereq` mostra as opções e pergunta o que faltar.
 
 ## Estrutura
 

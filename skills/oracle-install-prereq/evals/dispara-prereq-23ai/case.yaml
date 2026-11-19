@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: dispara-prereq-23ai
+expected_outcome: |
+  Consulta a skill oracle-install-prereq, trata 23ai como versão alvo e faz as perguntas de abertura que faltam (cenário, storage, alvo e acesso), sem citar valores de parâmetro de kernel, limits ou memória de cabeça.
