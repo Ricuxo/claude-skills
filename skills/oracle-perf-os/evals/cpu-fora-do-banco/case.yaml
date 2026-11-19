@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: cpu-fora-do-banco
+expected_outcome: |
+  Calcula a fração da CPU do host consumida pelo Oracle com as unidades certas (DB CPU e background cpu time em microssegundos, BUSY_TIME em centésimos de segundo): (480 s + 40 s) / 1733,76 s = cerca de 0,30. Conclui que cerca de 70% do consumo está fora do Oracle e que tunar SQL não resolve a saturação; manda investigar o que mais roda no servidor (top, outros processos, backup, antivírus/EDR, agentes).

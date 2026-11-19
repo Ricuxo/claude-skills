@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: sem-pack-ontem
+expected_outcome: |
+  Respeita a ausência de licença: não usa AWR, ASH, DBA_HIST_* nem V$ACTIVE_SESSION_HISTORY. Explica que as views V$ são acumuladas e não mostram ontem às 14h. Usa as fontes de histórico do SO (sar do dia anterior, OSWatcher, nmon) e o alert log. Statspack aparece só como recomendação para o próximo incidente, porque é instalação e não ajuda no de ontem.

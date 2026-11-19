@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: setall-media-enganosa
+expected_outcome: |
+  Explica que 0,4 ms em disco rotativo com filesystemio_options=none indica leituras servidas pelo page cache do SO, então a média não prova storage rápido. Alerta que mudar para SETALL com SGA de 4 GB elimina esse cache e pode piorar as leituras; a recomendação vem junto com aumentar a SGA/buffer cache, testar em homologação e restart planejado, sem executar ALTER SYSTEM.

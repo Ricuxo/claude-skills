@@ -1,0 +1,32 @@
+=== Coleta oracle-perf-os (dados sintéticos de teste) ===
+banco: <db_unique_name> | container: CDB$ROOT | versao: 19.0.0.0.0 | single instance, filesystem xfs
+startup_time: ha 45 dias
+Diagnostic Pack: Nao | shell: sim | lentidao: tem horario (09h-11h)
+
+--- V$OSSTAT
+NUM_CPUS 32 | NUM_CPU_CORES 16 | NUM_CPU_SOCKETS 1 | PHYSICAL_MEMORY_BYTES 274877906944 (256 GB)
+LOAD (09:40) 14.2
+
+--- Delta manual 09:40:02.118 -> 09:42:03.530 (121,4 s)
+dBUSY_TIME 213664 cs | dIDLE_TIME 174816 cs            -> %CPU host = 55,0%
+dDB_CPU 1785000000 us | d_background_cpu 180000000 us | dhost_busy 213664 cs -> fracao do banco 0,92
+dDB_time 2550000000 us | dDB_CPU 1785000000 us | d_fg_wait 690000000 us
+
+--- Memoria
+SGA 96 GB (sga_target 96G, memory_target 0, use_large_pages ONLY)
+PGA total allocated 22 GB | maximum PGA allocated 40 GB | pga_aggregate_target 24 GB | over allocation count 0
+/proc/meminfo: HugePages_Total 49200 | HugePages_Free 210 | HugePages_Rsvd 180 | Hugepagesize 2048 kB | PageTables 410 MB
+free -m: available 98000 MB | SwapTotal 16 GB | swap usada 0
+vmstat 5 12 (09:41): r 11-15 | b 0-1 | si 0 | so 0 | us 47 | sy 6 | wa 1 | st 0
+THP: uname -r 5.15.0-209.161.7.el8uek.x86_64 | enabled: always [madvise] never
+
+--- I/O (V$SYSTEM_EVENT, acumulado)
+db file sequential read 0,8 ms | db file scattered read 2,1 ms | log file parallel write 0,5 ms | log file sync 1,2 ms
+V$EVENT_HISTOGRAM db file sequential read: 98,6% <= 2 ms | 0,02% > 64 ms
+filesystemio_options SETALL | disk_asynch_io TRUE
+V$IOSTAT_FUNCTION: Buffer Cache Reads 71% | Direct Reads 18% | LGWR 6% | RMAN 0% (horario comercial)
+
+--- Rede e limites
+SQL*Net more data to client 0,1 ms medio
+V$RESOURCE_LIMIT: processes current 1210 | max_utilization 1462 | limit 1500
+V$RESOURCE_LIMIT: sessions max_utilization 1540 | limit 2272

@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: load-acima-dos-cores
+expected_outcome: |
+  Compara o load com os 32 cores físicos e não só com as 64 threads: 44 acima de 32 indica disputa de core, porque hyperthreading rende cerca de 15–30% a mais, não o dobro. Lembra que no Linux o load inclui processos em espera de I/O (estado D) e pede vmstat (colunas r, b, wa) para separar CPU de I/O antes de concluir.

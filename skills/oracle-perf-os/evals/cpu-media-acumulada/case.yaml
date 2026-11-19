@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: cpu-media-acumulada
+expected_outcome: |
+  Reconhece que BUSY_TIME/IDLE_TIME são acumulados desde o boot/startup (cerca de 200 dias) e que os 12% são a média desse período, que dilui o pico das 14h. Não conclui que a CPU está bem; pede medição por delta na janela das 14h (duas coletas com SYSTIMESTAMP) ou o histórico do sar do horário.

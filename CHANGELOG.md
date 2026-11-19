@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.6.1] — 2026-11-19
+### oracle-perf-os
+- Testes que discriminam: seis casos novos com armadilhas em que o modelo sem skill tende a errar
+  a condução: `cpu-media-acumulada`, `cpu-fora-do-banco`, `sem-pack-ontem`,
+  `load-acima-dos-cores`, `setall-media-enganosa` e `relatorio-lote` (com coleta sintética).
+  Além do conteúdo técnico, cobram as regras da skill: uma verificação por vez, licença de
+  Diagnostic Pack antes de AWR/ASH e o formato do relatório (veredito curto e "O que este nível
+  NÃO respondeu").
+- Resultado contra o modelo sem skill: 100% × 72%. Os critérios técnicos passam nas duas
+  configurações; a diferença está na condução. Nenhuma mudança no `SKILL.md`.
+
 ## [0.6.0] — 2026-11-19
 ### Repositório
 - Skills renomeadas para o padrão `<banco>-<domínio>-<objeto>`, com nome em inglês:
