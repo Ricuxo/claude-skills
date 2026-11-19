@@ -29,6 +29,18 @@ SELECT TO_CHAR(end_time,'HH24:MI') AS minuto, ROUND(value,2) AS valor
  ORDER BY end_time
 ```
 
+**Ressalva para dizer ao usuário:** as views `V$SYSMETRIC*` são populadas pelo MMON, a mesma
+infraestrutura do AWR, e há auditores que as tratam como área cinzenta. Contadores puros
+(`V$OSSTAT`, `V$SYSSTAT`, `V$SYSTEM_EVENT`) não têm essa ambiguidade. Em ambiente sensível a
+auditoria, prefira o delta manual e registre a escolha no relatório.
+
+## Passo 4.4 — Resource Manager
+
+```sql
+SELECT event, total_waits, ROUND(time_waited_micro/1000000,2) AS seg_total
+  FROM v$system_event WHERE event LIKE 'resmgr%' ORDER BY time_waited_micro DESC
+```
+
 ## Passo 5.3 — TEMP por sessão
 
 ```sql

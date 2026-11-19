@@ -10,7 +10,8 @@ vez, na ordem: CPU → memória → I/O → rede.
 vmstat 5 12            # coluna r = processos prontos esperando CPU; compare com nº de threads
                        # coluna st = steal (VM); acima de ~5% o hypervisor está tomando CPU
 mpstat -P ALL 5 5      # %sys alto = kernel (I/O sem async, page tables, THP); %iowait; %steal
-nproc; lscpu | egrep 'Socket|Core|Thread|Model name|NUMA'
+nproc; lscpu | egrep 'Socket|Core|Thread|Model name|NUMA|Hypervisor|Virtualization type'
+systemd-detect-virt    # none = físico; kvm, vmware, microsoft, xen, oracle... = VM → olhe st (steal)
 numactl --hardware
 top -b -n 1 -o %CPU | head -25
 ```

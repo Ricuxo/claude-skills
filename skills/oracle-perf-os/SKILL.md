@@ -42,7 +42,16 @@ funciona pelo MCP do SQLcl, no SQLcl/SQL\*Plus ou em qualquer cliente.
 o resultado com o usuário, diga o que ele mostra e só então peça a próxima — escolhida pelo
 que o número anterior indicou. Não despeje o roteiro inteiro e não abra hipóteses que os dados
 ainda não sustentam. Ordem de partida: uptime → CPU → memória → I/O → rede. Desvie quando um
-achado pedir (swap em uso pula direto para memória; latência alta de bloco único pula para I/O).
+achado pedir (swap ativa pula direto para memória; latência alta de bloco único pula para I/O).
+
+**Quando um fato fecha, diga logo o que fazer.** Em 1 a 3 linhas marcadas como recomendação,
+ligue o achado à ação. Se a causa ainda depende da próxima verificação, dê a ação de cada
+desfecho (ex.: backup → mover a janela; antivírus/EDR → excluir datafiles e redo da varredura;
+outro banco → separar ou limitar). Nada é executado; o relatório final consolida todas.
+
+**Não pergunte o que um comando somente leitura responde.** Físico ou VM, kernel, cores, THP:
+peça a saída do comando (`systemd-detect-virt`, `lscpu`, `uname -r`) em vez de perguntar.
+Pergunte só o que nenhum comando mostra: licença, horário do problema, o que mudou.
 
 **Modo lote** só quando o usuário pedir explicitamente ("roda tudo", "gera o relatório"):
 coleta completa e relatório no formato do final.
@@ -134,13 +143,9 @@ Valores em centésimos de segundo, somados em todas as CPUs.
 `V$SYSSTAT` e `V$SYS_TIME_MODEL` sempre que precisar de taxa.
 
 **Janela curta pronta.** `V$SYSMETRIC` (`group_id = 2`) entrega taxas do último minuto, e
-`V$SYSMETRIC_HISTORY` guarda cerca de uma hora, minuto a minuto. As consultas estão em
-`references/consultas.md` (seção Passo 3): **leia-o** quando precisar de taxa sem fazer delta manual.
-
-Ressalva para dizer ao usuário: as views `V$SYSMETRIC*` são populadas pelo MMON, a mesma
-infraestrutura do AWR, e há auditores que as tratam como área cinzenta. Contadores puros
-(`V$OSSTAT`, `V$SYSSTAT`, `V$SYSTEM_EVENT`) não têm essa ambiguidade. Em ambiente sensível a
-auditoria, prefira o delta manual e registre a escolha no relatório.
+`V$SYSMETRIC_HISTORY` guarda cerca de uma hora, minuto a minuto. As consultas e a ressalva de
+auditoria que precisa ser dita ao usuário estão em `references/consultas.md` (seção Passo 3):
+**leia-o** quando precisar de taxa sem fazer delta manual.
 
 ---
 
@@ -215,14 +220,8 @@ SELECT SYSTIMESTAMP AS coletado_em,
 - `ΔDB time − ΔDB CPU − Δfg_wait` grande: tempo não contabilizado, que é a sessão na fila do
   SO esperando CPU. É o indicador interno de run queue e complementa a coluna `r` do `vmstat`.
 
-Resource Manager segurando sessões de propósito:
-
-```sql
-SELECT event, total_waits, ROUND(time_waited_micro/1000000,2) AS seg_total
-  FROM v$system_event WHERE event LIKE 'resmgr%' ORDER BY time_waited_micro DESC
-```
-
-`resmgr:cpu quantum` relevante com `resource_manager_plan` vazio na consulta 4.1 costuma ser o
+Resource Manager segurando sessões de propósito: eventos `resmgr%`, consulta em
+`references/consultas.md` (seção Passo 4.4). `resmgr:cpu quantum` relevante com `resource_manager_plan` vazio na consulta 4.1 costuma ser o
 `DEFAULT_MAINTENANCE_PLAN` ativado pela janela de manutenção — muitos ambientes nem sabem.
 
 ---

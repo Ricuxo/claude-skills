@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.7.0] — 2026-11-19
+### oracle-perf-os
+- Modo interativo: quando um fato fecha, a resposta já diz o que fazer, em 1 a 3 linhas
+  marcadas como recomendação. Se a causa depende da próxima verificação, dá a ação de cada
+  desfecho (ex.: backup → mover a janela; antivírus/EDR → excluir datafiles e redo; outro
+  banco → separar ou limitar). O relatório final continua consolidando todas.
+- Nova regra: não perguntar o que um comando somente leitura responde (físico ou VM, kernel,
+  cores, THP). `coleta-so.md` ganha `systemd-detect-virt` e as linhas `Hypervisor` e
+  `Virtualization type` do `lscpu`.
+- O SQL do Resource Manager e a ressalva de auditoria do `V$SYSMETRIC*` foram para
+  `references/consultas.md`; o `SKILL.md` fica em 493 linhas.
+- Testes: critérios novos `cpu-fora-do-banco/06-recomendacao-por-desfecho` e
+  `load-acima-dos-cores/06-detecta-vm-por-comando`. Resultado: 100% × 68% contra o modelo sem
+  skill.
+
 ## [0.6.1] — 2026-11-19
 ### oracle-perf-os
 - Testes que discriminam: seis casos novos com armadilhas em que o modelo sem skill tende a errar
