@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: outro-sgbd-para-e-confirma
+expected_outcome: |
+  Lê a coleta, encontra PostgreSQL rodando (processo, serviço, diretório de dados e porta 5432) e para antes de comparar requisitos: mostra a evidência e pede confirmação de que este é o servidor certo, sem entregar veredito de aptidão.
+context:
+  scaffold_script: place-files.sh

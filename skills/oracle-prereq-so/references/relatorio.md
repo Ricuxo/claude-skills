@@ -81,3 +81,5 @@ Regras:
 - Confirmação e auditoria: não omitir itens `OK`, o relatório serve de evidência de auditoria.
 - Triagem: a comparação é completa; o resumo de configuração de SO só encurta a apresentação.
 - Não transcrever senhas nem conteúdo de arquivos que possam conter senha.
+- `<servidor>` é o alvo como o usuário o informou. Gravado em arquivo, o relatório fica
+  fora de qualquer repositório git (ver Princípios no `SKILL.md`).

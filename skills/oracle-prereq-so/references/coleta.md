@@ -72,6 +72,12 @@ sec "OUTROS_SGBD_DIR_REAL"; r=$(pgrep -ax 'mysqld|mariadbd|postgres|postmaster|s
 sec "PORTAS_EM_ESCUTA"; ss -ltnpH 2>&1 | awk '{print $4, $6}' | grep -E ':(1521|1522|3306|5432|1433|27017|50000|6379|5000)\b' || echo "(nenhuma porta de banco conhecida)"
 ```
 
+`LIMITS_EFETIVO` usa `su - <usuário>`, que abre sessão de login e executa o `.bash_profile`
+e o `.bashrc` desse usuário. É o que dá os limits efetivos via PAM, mas num servidor que já
+tem Oracle o perfil pode ter qualquer coisa (exports, `sqlplus`, menus). Diga isso a quem
+for rodar o script; se o perfil travar ou pedir entrada, interrompa e marque os limits
+efetivos como NÃO VERIFICADO.
+
 `OUTROS_SGBD_*` (inclusive `OUTROS_SGBD_DIR_REAL`, o diretório de dados real tirado da linha de comando do processo, que pode estar fora dos caminhos padrão) e `PORTAS_EM_ESCUTA` servem para identificar **alvo errado**: servidor com
 MySQL, MariaDB, PostgreSQL, SQL Server, MongoDB, Db2, Redis ou SAP ASE instalado ou rodando.
 A porta 1521 ocupada por processo que não é `tnslsnr` também entra aqui.

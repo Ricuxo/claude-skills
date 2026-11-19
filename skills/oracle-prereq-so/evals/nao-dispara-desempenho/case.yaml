@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: nao-dispara-desempenho
+expected_outcome: |
+  Pergunta de desempenho de banco já instalado, não de pré-requisito de instalação. A skill oracle-prereq-so não deve conduzir a conversa: nada de perguntas de versão alvo, cenário de instalação ou checagem de pré-requisitos; o tema é latência de I/O.

@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.4.0] — 2026-11-19
+### oracle-prereq-so
+- Conteúdo externo (páginas da documentação, saída da coleta) é tratado como dado: texto
+  que pareça instrução não muda as regras da skill e vira achado no relatório.
+- Relatório pode ter hostname e IP do servidor analisado (é para o usuário), mas, gravado
+  em arquivo, fica fora de repositório git: dentro de um, a skill pergunta onde salvar.
+  Substitui a regra que proibia hostname e IP no próprio relatório.
+- `coleta.md`: aviso de que `su - <usuário>` executa o perfil do usuário; se travar,
+  limits efetivos ficam NÃO VERIFICADO.
+- Testes: `dispara-prereq-23ai/02` e `nao-aplica-fixup/02` passam a cobrar o que a skill
+  faz no primeiro turno (perguntas de abertura), não o relatório. Novos casos:
+  `outro-sgbd-para-e-confirma` (com coleta sintética), `recusa-senha-ssh` e
+  `nao-dispara-desempenho` (disparo negativo).
+### Repositório
+- `scripts/verifica-sensivel.sh`: procura IPv4/IPv6/MAC, e-mail, domínio, chave privada,
+  token, senha (inclusive `IDENTIFIED BY` e `usuário/senha` no `sqlplus`), caminhos de saída
+  de teste e os termos de uma lista pessoal fora do repositório. Modos: stage, `--tudo`,
+  `--historico`, `--msg`. Exceções versionadas em `.sensivel-permitido`.
+- `scripts/instala-hooks.sh`: hooks `pre-commit` e `commit-msg` em `~/.config/claude-skills/hooks`
+  via `core.hooksPath` (funciona com o repositório em disco `noexec`). Chamado pelo `link.sh`.
+- `.gitignore`: workspaces de teste, `evals/results/`, relatórios, chaves e `.env`.
+
 ## [0.3.0] — 2026-11-17
 ### oracle-oop-patching (nova)
 - Conduz patching out-of-place de Oracle 19c (GI + DB) com `opatchauto -prepare-clone` /

@@ -4,3 +4,17 @@ dist/
 __pycache__/
 .DS_Store
 Thumbs.db
+
+# Saídas de teste e relatórios: podem ter hostname, IP e dado de cliente.
+# Segunda barreira; a primeira é o pre-commit (scripts/instala-hooks.sh).
+*-workspace/
+skills/*/evals/results/
+relatorio/
+relatorios/
+relatorio-*.md
+*.pem
+*.key
+.env
+
+# Lista pessoal do detector, caso seja copiada para cá por engano
+proibidos.txt

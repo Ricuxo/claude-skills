@@ -1,0 +1,152 @@
+### SO
+NAME="Oracle Linux Server"
+VERSION="8.10"
+ID="ol"
+VERSION_ID="8.10"
+5.15.0-209.161.7.2.el8uek.x86_64
+x86_64
+
+### CPU
+8
+Model name:          Intel(R) Xeon(R) Gold 6338 CPU @ 2.00GHz
+Socket(s):           1
+Core(s) per socket:  4
+Thread(s) per core:  2
+
+### MEMORIA
+MemTotal:       32617472 kB
+MemAvailable:   12043116 kB
+Shmem:            1835220 kB
+PageTables:        98112 kB
+SwapTotal:      16777212 kB
+SwapFree:       16777212 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+
+### PAGE_SIZE
+4096
+
+### THP
+always [madvise] never
+always defer defer+madvise [madvise] never
+(sem parametro no cmdline)
+
+### ESPACO
+Filesystem                 Size  Used Avail Use% Mounted on
+/dev/mapper/vg_app-lv_u01  100G  1.1G   99G   2% /u01
+/dev/mapper/ol-root         50G  9.8G   41G  20% /
+tmpfs                       16G     0   16G   0% /dev/shm
+
+### DEV_SHM
+tmpfs rw,nosuid,nodev,seclabel
+
+### SYSCTL_EM_USO
+kernel.sem = 250 32000 100 128
+kernel.shmall = 18446744073692774399
+kernel.shmmax = 18446744073692774399
+kernel.shmmni = 4096
+kernel.panic_on_oops = 1
+kernel.panic = 0
+fs.file-max = 6815744
+fs.aio-max-nr = 1048576
+net.ipv4.ip_local_port_range = 9000	65500
+net.core.rmem_default = 262144
+net.core.rmem_max = 4194304
+net.core.wmem_default = 262144
+net.core.wmem_max = 1048576
+vm.nr_hugepages = 0
+vm.swappiness = 10
+
+### SYSCTL_PERSISTIDO
+/etc/sysctl.d/99-oracle-database-preinstall-19c-sysctl.conf:fs.file-max = 6815744
+/etc/sysctl.d/99-oracle-database-preinstall-19c-sysctl.conf:kernel.sem = 250 32000 100 128
+/etc/sysctl.d/99-oracle-database-preinstall-19c-sysctl.conf:kernel.shmmni = 4096
+/etc/sysctl.d/99-oracle-database-preinstall-19c-sysctl.conf:fs.aio-max-nr = 1048576
+/etc/sysctl.d/99-oracle-database-preinstall-19c-sysctl.conf:net.ipv4.ip_local_port_range = 9000 65500
+/etc/sysctl.d/99-oracle-database-preinstall-19c-sysctl.conf:net.core.rmem_default = 262144
+/etc/sysctl.d/99-oracle-database-preinstall-19c-sysctl.conf:net.core.rmem_max = 4194304
+/etc/sysctl.d/99-oracle-database-preinstall-19c-sysctl.conf:net.core.wmem_default = 262144
+/etc/sysctl.d/99-oracle-database-preinstall-19c-sysctl.conf:net.core.wmem_max = 1048576
+/etc/sysctl.d/99-oracle-database-preinstall-19c-sysctl.conf:kernel.panic_on_oops = 1
+/etc/sysctl.d/99-postgresql.conf:vm.swappiness = 10
+
+### LIMITS_CONFIG
+/etc/security/limits.d/oracle-database-preinstall-19c.conf:oracle   soft   nofile    1024
+/etc/security/limits.d/oracle-database-preinstall-19c.conf:oracle   hard   nofile    65536
+/etc/security/limits.d/oracle-database-preinstall-19c.conf:oracle   soft   nproc    16384
+/etc/security/limits.d/oracle-database-preinstall-19c.conf:oracle   hard   nproc    16384
+/etc/security/limits.d/oracle-database-preinstall-19c.conf:oracle   soft   stack    10240
+/etc/security/limits.d/oracle-database-preinstall-19c.conf:oracle   hard   stack    32768
+/etc/security/limits.d/oracle-database-preinstall-19c.conf:oracle   hard   memlock    134217728
+/etc/security/limits.d/oracle-database-preinstall-19c.conf:oracle   soft   memlock    134217728
+
+### LIMITS_EFETIVO oracle
+nofile soft=1024 hard=65536 | nproc soft=16384 hard=16384 | stack soft=10240 hard=32768 | memlock soft=134217728 hard=134217728
+
+### USUARIO oracle
+uid=54321(oracle) gid=54321(oinstall) groups=54321(oinstall),54322(dba),54323(oper),54324(backupdba),54325(dgdba),54326(kmdba),54330(racdba)
+oracle:54321:54321:/home/oracle:/bin/bash
+
+### GRUPOS
+oinstall:x:54321:oracle
+dba:x:54322:oracle
+oper:x:54323:oracle
+backupdba:x:54324:oracle
+dgdba:x:54325:oracle
+kmdba:x:54326:oracle
+racdba:x:54330:oracle
+
+### PREINSTALL
+oracle-database-preinstall-19c-1.0-2.el8.x86_64
+
+### HORARIO
+                Time zone: America/Sao_Paulo (-03, -0300)
+System clock synchronized: yes
+              NTP service: active
+active
+inactive
+Reference ID    : C0000201 (servidor-ntp-exemplo)
+Stratum         : 3
+
+### HOSTNAME
+servidor-exemplo
+servidor-exemplo.example.com
+192.0.2.20      STREAM servidor-exemplo
+127.0.0.1   localhost localhost.localdomain
+::1         localhost localhost.localdomain
+192.0.2.20  servidor-exemplo.example.com servidor-exemplo
+
+### SELINUX_FIREWALL
+Enforcing
+active
+
+### ORACLE_EXISTENTE
+cat: /etc/oraInst.loc: No such file or directory
+grep: /etc/oratab: No such file or directory
+(nenhum processo Oracle)
+
+### OUTROS_SGBD_PROCESSOS
+1287 /usr/pgsql-16/bin/postgres -D /dados/pgsql/16/data
+1301 postgres: logger
+1303 postgres: checkpointer
+1304 postgres: background writer
+
+### OUTROS_SGBD_SERVICOS
+postgresql-16.service enabled enabled
+
+### OUTROS_SGBD_PACOTES
+postgresql16-16.4-1PGDG.rhel8.x86_64
+postgresql16-server-16.4-1PGDG.rhel8.x86_64
+postgresql16-libs-16.4-1PGDG.rhel8.x86_64
+
+### OUTROS_SGBD_DADOS
+(nenhum)
+
+### OUTROS_SGBD_DIR_REAL
+-D /dados/pgsql/16/data
+
+### PORTAS_EM_ESCUTA
+0.0.0.0:5432 users:(("postgres",pid=1287,fd=6))

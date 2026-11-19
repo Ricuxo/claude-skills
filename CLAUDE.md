@@ -18,7 +18,11 @@ o Claude Code lê `~/.claude/skills`, que aponta para `skills/` por symlink ou j
 - Escopo genérico: nunca incluir hostnames, domínios, IPs, nomes de banco, PDB, serviço ou
   conexão, usuários, senhas, e-mails, nomes de empresa ou cliente, CSI, nem ferramentas
   pessoais ou internas (Obsidian, Google Drive, pastas de blog, monitoração específica),
-  nem em exemplos ou evals. Use placeholders. Antes do commit, rode um grep de dados sensíveis.
+  nem em exemplos ou evals. Use placeholders; para IP e domínio de exemplo, `192.0.2.x`,
+  `2001:db8::` e `example.com`.
+- O pre-commit (`scripts/verifica-sensivel.sh`) barra commit com dado sensível. Não usar
+  `--no-verify`; falso positivo comprovado vai em `.sensivel-permitido`.
+- Relatórios e saídas de teste nunca ficam dentro do repositório.
 - Toda mudança de comportamento entra no `CHANGELOG.md`.
 
 ## Testes

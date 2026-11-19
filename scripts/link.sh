@@ -18,3 +18,6 @@ for dir in "$REPO"/*/; do
     echo "ligado: $nome"
   fi
 done
+
+# Hooks que barram commit com IP, hostname, senha ou token (repositório público).
+bash "$(dirname "$0")/instala-hooks.sh"

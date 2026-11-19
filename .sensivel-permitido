@@ -1,0 +1,7 @@
+# Exceções do scripts/verifica-sensivel.sh: uma regex por linha, comparada com o trecho
+# encontrado inteiro, sem diferenciar maiúsculas. Use só para falso positivo comprovado.
+
+# Versões Oracle que parecem IPv4
+12\.1\.0\.2
+# Release Updates no formato 19.33.0.0 / 23.26.0.0 (fora da faixa 10.x, que é rede privada)
+(1[1-9]|2[0-9])\.[0-9]{1,2}\.0\.0

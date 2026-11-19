@@ -42,8 +42,9 @@ cd ~/claude-skills
 ./scripts/link.sh
 ```
 
-O script liga cada skill em `~/.claude/skills` por symlink. Um `git pull` atualiza todas.
-Quando entrar uma skill nova, rode o script de novo: ele pula as que já estão ligadas.
+O script liga cada skill em `~/.claude/skills` por symlink e instala os hooks de commit
+(ver [Contribuindo](#contribuindo)). Um `git pull` atualiza todas. Quando entrar uma skill
+nova, rode o script de novo: ele pula as que já estão ligadas.
 
 ### Claude Code (Windows, usuário comum)
 
@@ -83,7 +84,7 @@ skills/<nome>/
 ├── SKILL.md        # instruções (obrigatório)
 ├── references/     # consultas, scripts de coleta e modelos de relatório, lidos sob demanda
 └── evals/          # casos de teste: prompt.md + case.yaml + graders/
-scripts/            # build.sh (ZIPs), link.sh e link.ps1 (instalação)
+scripts/            # build.sh (ZIPs), link.sh e link.ps1 (instalação), verifica-sensivel.sh e instala-hooks.sh
 dist/               # ZIPs gerados (fora do git)
 ```
 
@@ -94,6 +95,30 @@ dist/               # ZIPs gerados (fora do git)
    dado de cliente, nem em exemplos.
 2. Rode `./scripts/build.sh` para validar.
 3. Registre a mudança no [`CHANGELOG.md`](CHANGELOG.md).
+
+### Proteção contra dado sensível
+
+O repositório é público. Antes de cada commit, um hook roda `scripts/verifica-sensivel.sh`
+no que está no stage e na mensagem, e bloqueia se achar IP, e-mail, domínio interno, chave
+privada, token ou senha. Instale uma vez por clone (o `link.sh` já faz isso; no Windows,
+rode no Git Bash):
+
+```bash
+bash scripts/instala-hooks.sh
+```
+
+Hostname curto e nome de cliente não têm padrão reconhecível. Liste os seus em
+`~/.config/claude-skills/proibidos.txt`, um por linha. Esse arquivo fica fora do repositório
+e nunca é versionado.
+
+Para exemplos, use as faixas de documentação (`192.0.2.x`, `198.51.100.x`, `203.0.113.x`,
+`2001:db8::`) e `example.com`, que o detector aceita. Falso positivo comprovado vai em
+`.sensivel-permitido`. Para conferir o repositório inteiro ou todo o histórico:
+
+```bash
+bash scripts/verifica-sensivel.sh --tudo
+bash scripts/verifica-sensivel.sh --historico
+```
 
 ## Licença
 

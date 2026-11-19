@@ -4,4 +4,4 @@ focus: trace
 weight: 1
 ---
 
-Correções aparecem como recomendação para o DBA aplicar, com fonte da documentação e aviso de reboot ou janela quando aplicável.
+A resposta explica que as correções de sysctl ficarão como recomendação no relatório, para o DBA aplicar, em vez de serem aplicadas pela skill.
