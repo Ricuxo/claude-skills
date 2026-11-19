@@ -11,6 +11,32 @@ administração em Linux, passo a passo, sempre contra a documentação oficial 
 | [`oracle-perf-os`](skills/oracle-perf-os/SKILL.md) | Analisa desempenho de banco Oracle na camada de SO e infraestrutura: CPU, memória, HugePages, I/O, rede e interconnect de RAC. Interpreta `vmstat`, `iostat`, `sar` e os eventos de espera ligados a I/O |
 | [`oracle-patch-oop`](skills/oracle-patch-oop/SKILL.md) | Conduz o patching out-of-place de Oracle 19c (GI e DB) com `opatchauto -prepare-clone` / `-switch-clone`, em Oracle Restart, RAC e Data Guard: levantamento do host, seleção mínima de one-offs, pré-requisitos, analyze, preparação dos clones sem downtime, checklist da janela de troca, DST e rollback |
 
+## Nomes
+
+Cada skill se chama `<banco>-<domínio>-<objeto>[-<qualificador>]`, em inglês: `oracle-perf-os`
+é desempenho (`perf`) de Oracle na camada de sistema operacional (`os`). A `description` e as
+instruções ficam em português.
+
+| Domínio | O que entra | Tipo |
+|---|---|---|
+| `perf` | diagnóstico de desempenho | somente leitura |
+| `sec` | auditoria de segurança | somente leitura |
+| `adm` | administração do dia a dia: parâmetros, usuários, healthcheck | conforme a skill |
+| `install` | pré-requisito e instalação, uma skill por fase | a prereq lê; a instalação altera |
+| `patch` | patching e upgrade | altera |
+| `ha` | Data Guard, RAC, replica set | conforme a skill |
+| `bkp` | backup e recovery | conforme a skill |
+
+**Objetos:** `os`, `db`, `instance`, `session`, `sql`, `objects`, `app`, `users`, `params`,
+`network`, `storage`, `prereq`, `oop`, `healthcheck`. A lista é fechada: um objeto novo entra nela
+antes de ser usado.
+
+Quando o mesmo objeto aparece em `sec` e em `adm`, `sec` audita e `adm` altera. Exemplo:
+`oracle-sec-users` acha privilégio demais e senha padrão; `oracle-adm-users` cria usuários e
+concede privilégios.
+
+Os detalhes, incluindo como renomear uma skill, estão no [`CLAUDE.md`](CLAUDE.md#nomes-de-skill).
+
 ## Princípios
 
 As skills seguem as mesmas regras:
