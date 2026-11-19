@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: thp-madvise-kernel-rhck
+expected_outcome: |
+  Identifica que o kernel é RHCK (sem uek no nome), que a recomendação de madvise vale só para UEK7 ou mais novo, e que neste kernel a recomendação é desabilitar (never). Coloca a mudança como recomendação, sem aplicar nem orientar como passo de coleta.

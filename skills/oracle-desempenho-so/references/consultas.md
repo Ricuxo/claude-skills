@@ -1,4 +1,4 @@
-# Consultas de apoio (janela curta, TEMP e I/O)
+# Consultas de apoio (janela curta, TEMP, I/O, rede e limites)
 
 Consultas citadas no `SKILL.md`. A interpretação de cada uma fica no passo correspondente de lá;
 aqui só o SQL. Todas são somente leitura.
@@ -128,4 +128,27 @@ SELECT name, value, isdefault FROM v$parameter
  WHERE name IN ('filesystemio_options','disk_asynch_io','db_file_multiblock_read_count',
                 'db_writer_processes','dbwr_io_slaves','log_archive_max_processes','db_block_size')
  ORDER BY name
+```
+
+## Passo 7 — Rede e limites de instância
+
+Eventos de rede:
+
+```sql
+SELECT event, total_waits, ROUND(time_waited_micro/NULLIF(total_waits,0)/1000,3) AS ms_medio,
+       ROUND(time_waited_micro/1000000,2) AS seg_total
+  FROM v$system_event
+ WHERE event LIKE 'SQL*Net%' OR event LIKE '%TCP%'
+ ORDER BY time_waited_micro DESC
+```
+
+Limites de instância:
+
+```sql
+SELECT resource_name, current_utilization, max_utilization, initial_allocation, limit_value,
+       ROUND(max_utilization/NULLIF(TO_NUMBER(REPLACE(limit_value,'UNLIMITED','0')),0)*100,1) AS pct_pico
+  FROM v$resource_limit
+ WHERE resource_name IN ('processes','sessions','transactions','enqueue_locks','enqueue_resources',
+                         'dml_locks','temporary_table_locks','max_shared_servers','parallel_max_servers')
+ ORDER BY resource_name
 ```

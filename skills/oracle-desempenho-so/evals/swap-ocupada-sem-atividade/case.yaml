@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: swap-ocupada-sem-atividade
+expected_outcome: |
+  Distingue swap ocupada de swap ativa: com si/so zerados, os 6 GB são páginas antigas e não indicam emergência; com a SGA em HugePages, ela não vai para swap. Não endossa o reboot como correção e sugere acompanhar si/so (ou sar -W) e o OOM killer.

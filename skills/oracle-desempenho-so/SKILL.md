@@ -17,6 +17,11 @@ e o `oracle-desempenho-aplicacao` são os apoios das pontas. Se o usuário chego
 servidor está lento", colete este nível **e** o de instância: sozinho, este aqui mostra que a
 casa está quente, não quem ligou o fogão.
 
+Os outros níveis podem não estar instalados. Antes de encaminhar, confira se a skill do próximo
+nível aparece entre as disponíveis. Se não aparecer, não aja como se ela fosse rodar: diga qual
+é o próximo passo (por exemplo, "ver os top SQL por CPU") e entregue só o mínimo para dá-lo,
+sem expandir este nível para cobrir o outro.
+
 **Somente leitura.** Nada aqui cria, altera ou remove. Não execute nem oriente executar
 `ALTER SYSTEM`, mudança em `/etc/sysctl.conf`, instalação de Statspack ou qualquer outra
 mudança sem que o usuário confirme explicitamente que quer sair do diagnóstico. Vários desses
@@ -155,10 +160,12 @@ SELECT name, value, isdefault FROM v$parameter
  ORDER BY name
 ```
 
-`NUM_CPUS` conta **threads**. Com hyperthreading, uma thread não equivale a um core. Dois
-achados frequentes: VM onde `cpu_count` reflete o host e não o que a VM recebe, e licença por
-core enquanto o banco se acha dono de todas as threads. `cpu_count` diferente de `NUM_CPUS`
-significa que alguém setou manualmente — pergunte por quê antes de sugerir mudar.
+`NUM_CPUS` conta **threads**. Com hyperthreading, uma thread não equivale a um core. Em VM,
+`NUM_CPUS` e `cpu_count` mostram as vCPUs do convidado, não o host; o risco ali é overcommit
+do hypervisor, que aparece como `%steal` no SO e é invisível ao banco. O banco enxerga CPU que
+não tem em contêiner ou cgroup com cota, LPAR com pool compartilhado e zonas. `cpu_count`
+diferente de `NUM_CPUS` (com `isdefault = FALSE`) significa que alguém setou — às vezes de
+propósito, por licença ou instance caging. Pergunte por quê antes de sugerir mudar.
 
 ### 4.2 Carga instantânea
 
@@ -169,8 +176,9 @@ SELECT (SELECT value FROM v$osstat WHERE stat_name='LOAD') AS load_atual,
   FROM dual
 ```
 
-`LOAD / threads` acima de 1 = mais trabalho pronto do que CPU. Compare também com `cores`:
-com HT, load de 1,0 por thread já é saturação real dos cores. No Linux o load inclui processos
+`LOAD / threads` acima de 1 = mais trabalho pronto do que CPU. Compare também com `cores`: o HT
+rende tipicamente 15–30% a mais, não o dobro, então load acima do número de cores já indica
+disputa de core mesmo com threads sobrando. No Linux o load inclui processos
 em espera de I/O (estado D), então load alto com CPU ociosa aponta para I/O, não CPU.
 
 ### 4.3 Quanto da CPU é do banco — só por delta
@@ -254,9 +262,19 @@ SELECT SYSTIMESTAMP AS coletado_em, stat_name, value FROM v$osstat
  WHERE stat_name IN ('VM_IN_BYTES','VM_OUT_BYTES')
 ```
 
-Crescimento entre duas coletas é o que importa. **Servidor de banco fazendo swap é emergência**:
-páginas da SGA indo para disco transformam acesso de memória em acesso de disco sem que nenhuma
-métrica do banco perceba. Confirme no SO se o OOM killer já agiu (`references/coleta-so.md`).
+Crescimento entre duas coletas é um **indício**, não a prova: a Oracle não documenta de qual
+contador do Linux esses valores vêm, e paginação de arquivo pode entrar na conta. Confirme no SO.
+
+Separe duas coisas que o usuário costuma juntar:
+- **Swap ocupada** (`SwapTotal − SwapFree` > 0) com `si`/`so` zerados no `vmstat`: páginas que
+  foram para disco uma vez e não voltaram. Comum e, sozinha, não é problema — registre e siga.
+- **Swap ativa** (`si`/`so` do `vmstat` ou `pswpin/s`/`pswpout/s` do `sar -W` diferentes de zero
+  de forma sustentada): **emergência**. Acesso de memória virou acesso de disco sem que nenhuma
+  métrica do banco perceba, e nenhum tuning compensa.
+
+Com a SGA inteira em HugePages, a SGA não vai para swap (HugePages não são pagináveis): quem vai
+é PGA e memória de processo. Sem HugePages, a própria SGA pode ir. Confirme também se o OOM
+killer já agiu (`references/coleta-so.md`).
 
 ### 5.3 PGA e TEMP
 
@@ -297,13 +315,16 @@ Quatro coisas que valem mais do que parecem:
   HugePages não é usada — muito ambiente tem HugePages configurada no SO e inativa por isso.
 - `use_large_pages = ONLY` faz a instância se recusar a subir sem HugePages, o que ao menos
   torna o problema visível.
-- **Transparent HugePages: a regra depende do kernel.** Em UEK7 ou mais novo, a Oracle recomenda
-  `madvise`; em UEK anterior ao UEK7, desabilitar (`never`). Fonte: "Setting and Disabling
-  Transparent HugePages on UEK Kernels", no guia de instalação da versão (`ladbi`). A página
-  genérica "Restrictions for HugePages and Transparent HugePages Configurations" ainda manda
-  desabilitar sempre: cite as duas e use a do kernel. Em qualquer kernel, `always` está fora da
-  recomendação. THP em `always` causa travamentos intermitentes por compactação de memória no
-  kernel, que parecem problema de storage.
+- **Transparent HugePages: a regra depende do kernel** — identifique-o por `uname -r` (`uek` no
+  nome = UEK; sem isso, em Oracle Linux/RHEL, é o RHCK).
+  - UEK7 ou mais novo: a Oracle recomenda `madvise`. Fonte: "Setting and Disabling Transparent
+    HugePages on UEK Kernels", no guia de instalação da versão (`ladbi`).
+  - UEK anterior ao UEK7, RHCK, RHEL, SLES e demais kernels: desabilitar (`never`), como na página
+    genérica "Restrictions for HugePages and Transparent HugePages Configurations". A exceção do
+    `madvise` é só do UEK7+; não a estenda a outro kernel.
+  - Kernel não identificado: diga que a regra depende dele e peça o `uname -r` antes de julgar.
+  - Em qualquer kernel, `always` está fora da recomendação. THP em `always` causa travamentos
+    intermitentes por compactação de memória no kernel, que parecem problema de storage.
 
 ---
 
@@ -322,8 +343,12 @@ saudável com cache; acima de 10 ms = lento; acima de 20 ms = contenção real.
 
 **`log file sync` versus `log file parallel write`:** se o sync for muito maior que o parallel
 write, o storage do redo não é o problema — é commit excessivo da aplicação, CPU saturada
-atrasando o LGWR ou o LGWR perdendo prioridade no SO. `log file parallel write` saudável fica
-abaixo de ~2 ms em flash e ~5 ms em disco.
+atrasando o LGWR, o LGWR perdendo prioridade no SO ou, no 12c+, o **polling adaptativo do log
+file sync**: a sessão passa a verificar o término em intervalos em vez de ser avisada, e o sync
+sobe mesmo com escrita rápida. Para confirmar, procure `switching to polling` no trace do LGWR
+(`<sid>_lgwr_<pid>.trc` no diretório de trace). Mudar esse comportamento exige parâmetro oculto:
+é assunto de SR com o suporte, nunca recomendação direta desta skill.
+`log file parallel write` saudável fica abaixo de ~2 ms em flash e ~5 ms em disco.
 
 A média esconde a cauda: olhe a distribuição em `V$EVENT_HISTOGRAM`. Em flash/NVMe quase tudo
 cai no balde de 1 ms; use `V$EVENT_HISTOGRAM_MICRO` (12.1.0.2+).
@@ -352,21 +377,21 @@ diskgroup. Um disco com latência muito acima dos irmãos = LUN ou caminho de mu
 `dbwr_io_slaves`, `log_archive_max_processes` e `db_block_size`, de `V$PARAMETER`.
 
 Em filesystem (não ASM), `filesystemio_options = SETALL` habilita I/O assíncrono e direto; sem
-isso o banco passa pelo page cache do SO, que duplica o cache e desperdiça RAM. Alto retorno,
-baixo risco — mas exige restart: é recomendação, não diagnóstico. `db_file_multiblock_read_count`
+isso o banco passa pelo page cache do SO, que duplica o cache e desperdiça RAM. Dois cuidados:
+- Com `none`, parte das leituras vem do page cache, e a média de `db file sequential read` sai
+  baixa demais. Não use essa média como prova de storage rápido.
+- Um banco com SGA pequena que vinha se apoiando no page cache **piora** ao passar para I/O
+  direto, porque perde esse cache de uma vez. A recomendação de `SETALL` vem junto com a revisão
+  do tamanho do buffer cache e de teste em homologação; exige restart. É recomendação, não
+  diagnóstico. `db_file_multiblock_read_count`
 setado manualmente (`isdefault = FALSE`) merece pergunta; o default autoajustável costuma ser melhor.
 
 ---
 
 ## Passo 7 — Rede, interconnect e limites
 
-```sql
-SELECT event, total_waits, ROUND(time_waited_micro/NULLIF(total_waits,0)/1000,3) AS ms_medio,
-       ROUND(time_waited_micro/1000000,2) AS seg_total
-  FROM v$system_event
- WHERE event LIKE 'SQL*Net%' OR event LIKE '%TCP%'
- ORDER BY time_waited_micro DESC
-```
+O SQL de rede e de limites de instância está em `references/consultas.md` (seção Passo 7);
+leia-o ao entrar neste passo.
 
 `SQL*Net message from client` é ocioso — ignore. Importam `SQL*Net more data to client` e
 `SQL*Net break/reset to client`. Latência de rede da aplicação aparece melhor por round-trips,
@@ -376,18 +401,7 @@ em `oracle-desempenho-aplicacao`.
 latência `gc 2-way`/`3-way`, blocos perdidos e interfaces configuradas. É infraestrutura de rede
 pura e o achado mais comum de "lentidão só no RAC".
 
-**Limites de instância:**
-
-```sql
-SELECT resource_name, current_utilization, max_utilization, initial_allocation, limit_value,
-       ROUND(max_utilization/NULLIF(TO_NUMBER(REPLACE(limit_value,'UNLIMITED','0')),0)*100,1) AS pct_pico
-  FROM v$resource_limit
- WHERE resource_name IN ('processes','sessions','transactions','enqueue_locks','enqueue_resources',
-                         'dml_locks','temporary_table_locks','max_shared_servers','parallel_max_servers')
- ORDER BY resource_name
-```
-
-`max_utilization` é a marca d'água desde o startup. `processes` a 98% do limite = já esteve a
+**Limites de instância** (`V$RESOURCE_LIMIT`): `max_utilization` é a marca d'água desde o startup. `processes` a 98% do limite = já esteve a
 um passo de `ORA-00020`. Cada processo consome memória — conversa direto com o Passo 5.
 
 ---
@@ -431,16 +445,18 @@ Quase tudo neste nível é sintoma. Procure especificamente:
 - **`%sys` alto** — I/O sem async, page tables grandes sem HugePages, THP compactando ou
   excesso de processos.
 - **`%steal` acima de ~5% em VM** — o hypervisor está tomando CPU; `V$OSSTAT` não enxerga isso.
-- **Swap em uso ou OOM killer no `dmesg`** — crítico. Diga isso com clareza; nenhum tuning compensa.
+- **Swap ativa (`si`/`so` sustentado) ou OOM killer no `dmesg`** — crítico. Diga isso com
+  clareza; nenhum tuning compensa. Swap só ocupada, com `si`/`so` zerados, é registro, não alarme.
 - **`over allocation count` > 0 com TEMP alta** — PGA subdimensionada, custo aparecendo como I/O.
 - **`memory_target` setado com HugePages no SO** — HugePages inativa.
-- **THP em `always`** — fonte provável de travamentos intermitentes (`madvise` em UEK7+ está certo; ver 5.4).
+- **THP em `always`**, ou `madvise` fora do UEK7+ — fonte provável de travamentos intermitentes
+  (`madvise` em UEK7+ está certo; ver 5.4).
 - **`db file sequential read` acima de 10 ms** — storage lento *ou* cache pequeno gerando leituras
   que não deveriam existir. O histograma e o volume separam as duas causas.
 - **Cauda ruim no histograma com média boa** — problema intermitente de storage; o achado que
   mais explica "trava de vez em quando".
-- **`log file sync` muito acima de `log file parallel write`** — problema de commit ou CPU, não
-  de storage.
+- **`log file sync` muito acima de `log file parallel write`** — problema de commit, CPU ou
+  polling do LGWR, não de storage.
 - **`%util` alto no `iostat` em SSD, NVMe ou LUN de SAN** — **não** indica saturação nesses
   dispositivos, que atendem requisições em paralelo. Olhe `r_await`/`w_await` e `aqu-sz`.
 - **Disco ASM com latência fora do padrão dos irmãos** — LUN ou caminho degradado.
@@ -467,27 +483,12 @@ bem" sem apontar o próximo nível deixa o usuário onde estava.
 
 ---
 
-## Cuidados operacionais
+## Cuidados operacionais e versões
 
-- Views `V$` zeram no restart — sempre informe o uptime.
-- Data Guard: standby em `MOUNTED` responde a `V$OSSTAT` e `V$SYSTEM_EVENT`, mas o perfil de
-  I/O é de recuperação. Não compare com o primary.
-- Exadata: eventos mudam de nome (`cell single block physical read`, `cell smart table scan`) e
-  as referências de latência são outras. Se aparecer `cell%`, diga que é Exadata e ajuste a leitura.
-- VM: `V$OSSTAT` vê só o SO convidado. Verifique `%steal` antes de concluir que há CPU sobrando.
-- Nuvem gerenciada (RDS, Autonomous): sem shell; diga que a cobertura de SO depende das métricas
-  do provedor.
-- Nunca escreva senhas, strings de conexão ou dados de negócio no relatório.
+Views `V$` zeram no restart — sempre informe o uptime. Nunca escreva senhas, strings de conexão
+ou dados de negócio no relatório.
 
-## Diferenças por versão
-
-| Recurso | 11g | 12c+ |
-|---|---|---|
-| `V$IOSTAT_FUNCTION`, `V$IOSTAT_FILE` | sim | sim |
-| `V$EVENT_HISTOGRAM` | sim | sim |
-| `V$EVENT_HISTOGRAM_MICRO` | não | 12.1.0.2+ |
-| `V$DIAG_ALERT_EXT` | não (grep no alert log) | sim |
-| `FETCH FIRST n ROWS` | não (use `ROWNUM`) | sim |
-| `V$PROCESS.STID` | não | sim |
-| `pga_aggregate_limit` | não | sim |
-| `CON_ID` nas views V$ | não | sim |
+**Leia `references/ambientes-versoes.md`** quando o ambiente for Data Guard (standby), Exadata
+(eventos `cell%`), VM, nuvem gerenciada, ou quando a versão for 11g ou uma consulta falhar por
+coluna ou sintaxe inexistente: o arquivo traz os ajustes de leitura e a tabela de diferenças
+por versão.

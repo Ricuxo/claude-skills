@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.5.1] — 2026-11-19
+### oracle-desempenho-so
+- Swap: separa swap ocupada (páginas antigas, `si`/`so` zerados, sem alarme) de swap ativa
+  (`si`/`so` sustentado, emergência). `VM_IN_BYTES`/`VM_OUT_BYTES` viram indício a confirmar no
+  SO. Com a SGA em HugePages, o que vai para swap é PGA e processo, não a SGA.
+- THP: regra explícita para kernels fora do UEK7+ (UEK antigo, RHCK, RHEL, SLES): `never`. O
+  `madvise` vale só no UEK7+; kernel não identificado pede `uname -r` antes de julgar.
+- `filesystemio_options = SETALL` deixa de ser "baixo risco": SGA pequena que dependia do page
+  cache piora com I/O direto; e, com `none`, a média de `db file sequential read` sai baixa demais.
+- `cpu_count` em VM: corrigido. VM mostra as vCPUs do convidado (o risco é `%steal`); quem vê CPU
+  que não tem é contêiner/cgroup, LPAR e zonas.
+- `log file sync` ≫ `log file parallel write`: inclui o polling adaptativo do LGWR (12c+),
+  confirmado pelo trace do LGWR; mudança via parâmetro oculto só com SR.
+- HT: load acima do número de cores já é disputa (HT rende 15–30%, não o dobro).
+- Níveis 2–6 não instalados: a skill confere antes de encaminhar e, sem a skill do próximo
+  nível, diz o próximo passo sem fingir que ela vai rodar.
+- `V$ASM_DISK_IOSTAT`: nota de unidade (segundos no 19c+, centésimos no manual 11.2).
+- `coleta-so.md`: `si`/`so` e `sar -W` na coleta de memória; `rp_filter` com HAIP no RAC;
+  limits do `pmon` da instância certa (`ora_pmon_<sid>`), não do primeiro encontrado.
+- Cuidados operacionais e tabela de versões foram para `references/ambientes-versoes.md`; o SQL
+  do Passo 7 foi para `references/consultas.md`. `SKILL.md` fica em 494 linhas.
+- Testes: novos casos `swap-ocupada-sem-atividade`, `thp-madvise-kernel-rhck` e
+  `log-file-sync-polling`.
+
 ## [0.5.0] — 2026-11-19
 ### oracle-prereq-so
 - Documentação por cópia local: se o usuário indicar um diretório, ou se existir

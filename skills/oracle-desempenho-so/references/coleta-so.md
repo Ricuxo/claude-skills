@@ -19,10 +19,12 @@ top -b -n 1 -o %CPU | head -25
 
 ```bash
 free -m                                    # 'available' importa, não 'free'
+vmstat 5 12                                # si/so: swap ATIVA; zerados = swap só ocupada, sem alarme
+sar -W 5 5                                 # pswpin/s, pswpout/s: o mesmo, por outra fonte
 egrep -i 'MemTotal|MemAvailable|SwapTotal|SwapFree|Huge|PageTables' /proc/meminfo
 cat /proc/sys/vm/swappiness                # em servidor de banco: baixo (1–10)
-uname -r                                   # a regra do THP depende do kernel (UEK7+ ou anterior)
-cat /sys/kernel/mm/transparent_hugepage/enabled   # esperado: [madvise] em UEK7+, [never] antes (ver 5.4)
+uname -r                                   # a regra do THP depende do kernel: 'uek' no nome = UEK
+cat /sys/kernel/mm/transparent_hugepage/enabled   # esperado: [madvise] em UEK7+; [never] em UEK antigo, RHCK, RHEL, SLES (ver 5.4)
 cat /sys/kernel/mm/transparent_hugepage/defrag
 dmesg -T | grep -iE 'oom|out of memory|killed process|hung_task'
 ```
@@ -75,6 +77,13 @@ RAC: rode na interface **privada**. Falhas de remontagem (`reassem`) ou retransm
 crescendo com `gc blocks lost` > 0 = MTU inconsistente entre nós/switch ou buffers UDP
 pequenos (`net.core.rmem_max`). Confirme o MTU dos dois lados: `ip link show <interface>`.
 
+Com mais de uma placa privada (HAIP), `rp_filter` estrito descarta pacotes que chegam pela
+placa "errada" e gera `gc blocks lost`. Deve ser `0` ou `2` nas interfaces privadas:
+
+```bash
+sysctl -a 2>/dev/null | grep -E '\.rp_filter'
+```
+
 ## Histórico do dia (sysstat)
 
 ```bash
@@ -96,7 +105,8 @@ Para dia anterior, troque `date +%d` por `date -d yesterday +%d`.
 Os limites que valem são os do processo em execução, não os da sua sessão de shell:
 
 ```bash
-cat /proc/$(pgrep -f ora_pmon_ | head -1)/limits
+pgrep -af '_pmon_'                          # lista as instâncias; escolha o <sid> analisado
+cat /proc/$(pgrep -f "ora_pmon_<sid>$")/limits
 df -h
 mount | grep -iE 'oracle|u0'
 ```

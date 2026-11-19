@@ -4,7 +4,8 @@ Leia a seção que se aplica ao ambiente. Ambas são somente leitura.
 
 ## ASM
 
-Latência por disco e diskgroup vista por esta instância (`READ_TIME`/`WRITE_TIME` em segundos):
+Latência por disco e diskgroup vista por esta instância (`READ_TIME`/`WRITE_TIME` em segundos
+na referência 19c+; em 11g veja a nota de unidade em `references/ambientes-versoes.md`):
 
 ```sql
 SELECT dg.name AS diskgroup, d.path, i.reads, i.writes, i.read_errs, i.write_errs,
@@ -44,4 +45,5 @@ SELECT inst_id, name, ip_address, is_public, source FROM gv$cluster_interconnect
 
 `gc ... 2-way` acima de ~1 ms em rede dedicada = interconnect lento. `gc blocks lost` diferente
 de zero e crescendo = perda de pacote na rede privada (MTU inconsistente, buffer UDP pequeno,
-placa com erro) — confirme no SO. Interconnect com `is_public = YES` é erro de configuração.
+placa com erro, ou `rp_filter` estrito com mais de uma placa privada) — confirme no SO pelos
+comandos de rede de `references/coleta-so.md`. Interconnect com `is_public = YES` é erro de configuração.

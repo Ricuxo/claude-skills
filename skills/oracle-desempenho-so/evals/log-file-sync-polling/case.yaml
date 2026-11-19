@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: log-file-sync-polling
+expected_outcome: |
+  Descarta o storage do redo pelo log file parallel write baixo e, com CPU folgada e commit moderado, aponta o polling adaptativo do log file sync (12c+) como suspeito, pedindo para procurar "switching to polling" no trace do LGWR. Não recomenda alterar parâmetro oculto por conta própria.
