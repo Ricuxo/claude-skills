@@ -39,6 +39,32 @@
   via `core.hooksPath` (funciona com o repositório em disco `noexec`). Chamado pelo `link.sh`.
 - `.gitignore`: workspaces de teste, `evals/results/`, relatórios, chaves e `.env`.
 
+## [0.3.1] — 2026-11-18
+### oracle-oop-patching
+- **Levantamento: HugePages** (só leitura). O pool é comparado com a soma das SGAs (`ipcs -m`,
+  método do MOS 401749.1), e o alert log de cada instância é lido na tabela `Supported system
+  pagesize(s)` do 19c, que mostra SGA em 4 KB mesmo quando a instância sobe sem erro. Se
+  encontrar `use_large_pages=TRUE`, a skill avisa e pergunta; para alterar, primeiro calcula se o
+  pool comporta tudo. Ordem: `sysctl -w`, depois conferir o `HugePages_Total`, depois persistir,
+  e só no fim `ONLY` no spfile. `ONLY` é a recomendação da Database Reference 19c.
+- **Checklist da janela:** pool suficiente no pré-switch; no pós-switch, toda a SGA de cada
+  instância em 2048K.
+- **Analyze:** caso do one-off de mesmo número com build antigo dependente da RU antiga
+  ("will not roll back ... until you have rolled back dependent patch(es)"). Ensaio com
+  `-report`, rollback garantido (zip do build antigo conferido pelo `unique_patch_id` e por md5,
+  mais tar de `inventory`, `.patch_storage` e `oraInventory`), rollback na origem e analyze de novo.
+- **Execução:** scripts SQL de mudança com `whenever sqlerror exit failure`, para o backup
+  vir antes e abortar se falhar. Diretório de arquivo gravado pelo banco tem que ser do owner
+  da home (ORA-07391).
+- **Stage:** extração com `-x PatchSearch.xml`, porque todos os zips trazem esse arquivo e o
+  prompt de sobrescrever consome o script enviado por stdin. Execução remota com comandos como
+  argumento e `< /dev/null`. Conferência da quantidade de arquivos contra `unzip -Z1`. Em RAC
+  com ACFS, um único stage e um único `clone.properties` servem a todos os nós.
+- **Analyze, one-off antigo em RAC:** a GI home fica travada pelo root, então o rollback na
+  origem falha no ensaio (*Destination directory is not writable*) e exige `rootcrs.sh -prepatch`
+  e `-postpatch`, o que significa uma parada rolling por nó. No Oracle Restart, não.
+- Novo eval `evals/hugepages-switch/`.
+
 ## [0.3.0] — 2026-11-17
 ### oracle-oop-patching (nova)
 - Conduz patching out-of-place de Oracle 19c (GI + DB) com `opatchauto -prepare-clone` /

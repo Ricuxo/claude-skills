@@ -15,6 +15,8 @@ Esta skill **guia**. Por padrão, o usuário roda os comandos nos servidores e c
 - Antes de editar um arquivo de configuração (listener.ora, oratab etc.), faça backup com sufixo de timestamp (`<arquivo>.bak_YYYYMMDD_HHMMSS`) e mostre o `diff` depois.
 - `/etc/oratab` se edita como **root**: o `sed -i` como owner falha porque ele não consegue criar o temporário em `/etc`.
 - Alterações no **primário de produção** (ex.: `ALTER SYSTEM`) só com pedido explícito. Diagnostique e entregue o comando.
+- **O backup vem antes, e o script aborta se ele falhar.** Todo script SQL de mudança começa com `whenever sqlerror exit failure`. Sem isso, um `create pfile` que falha não impede o `ALTER SYSTEM` seguinte, e a mudança fica sem backup.
+- O diretório de destino de arquivos gravados **pelo banco** (`create pfile`, Data Pump, trace) precisa pertencer ao owner da home. Um diretório criado como root dá ORA-07391.
 
 ## Abertura obrigatória (antes do primeiro comando)
 
@@ -68,6 +70,20 @@ Exemplo para a RU 19.33: `/u01/app/19.33.0.0/grid` e `/u01/app/oracle/product/19
    - No 19c, o `StaticConnectIdentifier` é propriedade da **instância**: `show instance <sid> StaticConnectIdentifier on database <db>`.
    - **Listener estático** (`listener.ora` da GI): o `SID_NAME` precisa ser **idêntico ao SID real**, porque no Linux ele diferencia maiúsculas de minúsculas. Se não for, o Broker não consegue subir a instância em switchover ou failover. Padrão do `GLOBAL_DBNAME`: `<db_unique_name>_DGMGRL`. Depois de corrigir, `lsnrctl reload` (sem downtime) e `show configuration` em todos os bancos do host.
 6. Recursos afetados pela GI: filesystems ACFS montados (`mount -t acfs`), GoldenGate, QoS (`srvctl status qosmserver`).
+7. **HugePages** (só leitura). O switch-clone reinicia todas as instâncias do host, e cada uma realoca a SGA nesse momento.
+   - 👤 oracle: `grep -i huge /proc/meminfo`, `cat /sys/kernel/mm/transparent_hugepage/enabled` e, em cada instância, `use_large_pages`, `sga_max_size` e `memory_target`.
+   - Necessário: a soma de `ipcs -m` (bytes ÷ Hugepagesize), que é o método do MOS 401749.1, comparada com `HugePages_Total`.
+   - **Prova por instância:** no alert log do último startup, a tabela `Supported system pagesize(s)` (19c). Se `ALLOCATED_PAGES` de 4K for alto, a SGA está em páginas pequenas.
+   - Com `use_large_pages=TRUE` (o default), se faltar HugePages, a instância sobe **em silêncio** com o resto da SGA em 4 KB. O resultado é mais page table, SGA sujeita a swap e lentidão depois da janela, que parece culpa do patch.
+   - A Oracle recomenda `ONLY` *"for consistent performance"* (Database Reference 19c, `USE_LARGE_PAGES`). Com `ONLY`, a instância não sobe se faltar HugePages, e ele não pode coexistir com `MEMORY_TARGET` ou `MEMORY_MAX_TARGET` explícitos no spfile. Um ASM com AMM fica com `FALSE` automaticamente, e isso é normal.
+   - **Encontrou `TRUE`:** avise e pergunte se é para alterar. Se o usuário disser que sim, **calcule antes** se o pool comporta a soma das SGAs de todas as instâncias do host.
+   - Ordem segura, com cada passo confirmado:
+     1. Aumentar o pool com `sysctl -w vm.nr_hugepages=<n>` (👤 root).
+     2. Conferir se o `HugePages_Total` chegou ao valor pedido. Com memória fragmentada, o kernel pode alocar menos.
+     3. Só então persistir no `sysctl.conf`, com backup e `diff`. Confira antes se o valor não vem também da cmdline ou do tuned.
+     4. Por último, `alter system set use_large_pages='ONLY' scope=spfile sid='*'`, que vale no restart do switch.
+     - Rollback: `sysctl -w` com o valor antigo e `alter system reset use_large_pages scope=spfile sid='*'`.
+     - Nunca grave `ONLY` com o pool menor que a soma, porque a última instância a subir no switch não volta (ORA-27106).
 
 ## Fase 2 — Seleção de patches (mudança mínima)
 
@@ -116,6 +132,10 @@ Os patches precisam vir do contrato de suporte que cobre as licenças do ambient
   - Confira com `opatch version -oh <HOME>` em cada home.
 - **Espaço para 4 homes** no filesystem das homes (as atuais, que são o rollback, mais os clones). Meça com `du -sh` e `df -h` (👤 root). Livre necessário ≥ (soma das homes atuais) + 5 GB por home + 10 GB de margem. Libere espaço com adrci/purgeLogs. Nunca apague o `.patch_storage` das homes atuais.
 - **Stage limpo** (👤 root): um diretório contendo **só** os diretórios dos patches, com `chown` para o owner das homes.
+  - Cada zip traz um `PatchSearch.xml` na raiz. Extraia com `unzip -q <zip> -x PatchSearch.xml -d <stage>`. Sem isso, a partir do segundo zip o `unzip` pergunta se deve sobrescrever o arquivo.
+  - Num script enviado por stdin (`ssh <host> 'bash -s' <<EOF`), esse prompt consome o resto do script como resposta, e os comandos seguintes não rodam. Em execução remota, passe os comandos como argumento do `ssh`, com `< /dev/null`.
+  - Ao final, confira se a quantidade de arquivos de cada patch no stage é igual à do zip (`unzip -Z1`).
+  - Com o stage num filesystem compartilhado (ACFS) em RAC, um único stage e um único `clone.properties` servem a todos os nós.
 - **clone.properties** (👤 root), com uma linha `home_atual=home_nova` por home, com os destinos no padrão de Oracle Home. Exemplo:
   ```
   /u01/app/19.0.0/grid=/u01/app/19.33.0.0/grid
@@ -130,6 +150,19 @@ Os patches precisam vir do contrato de suporte que cobre as licenças do ambient
 Confira os caminhos dos clones e os patches aplicados em cada home. É normal: patches de DB também aplicados na GI, one-offs do OCW aplicados nas duas homes, e ACFS/Tomcat/DBWLM aparecendo como SKIPPED na DB. O analyze **pode não mostrar** a remoção de um one-off substituído. Valide no `lspatches` do clone.
 
 O conflict check manual (👤 oracle) com `opatch prereq CheckConflictAgainstOHWithDetail` deve ser feito **por sub-patch**. No bundle inteiro, dá error 21.
+
+**One-off de mesmo número, com build antigo instalado.** Sintoma: *"OPatch will not roll back [<RU antiga>] until you have rolled back dependent patch(es) [<one-off>]"*. O build antigo do one-off depende da RU antiga, e o opatchauto não resolve a dependência sozinho, mesmo quando o log diz que o patch é *auto rollbackable*. Esse caso é diferente do de um one-off substituído por outro de número diferente.
+
+Caminho:
+1. Ensaio na origem (👤 oracle, não altera nada): `opatch rollback -id <one-off> -oh <HOME> -report`. Confira no log se não pede shutdown nem relink e quais arquivos troca. Depois confira se o patch continua no `lspatches`.
+2. Rollback garantido antes de alterar:
+   - o zip do **build antigo** no servidor, conferido pelo `unique_patch_id` do `inventory.xml` e pelo md5 dos arquivos contra os da home;
+   - um tar com timestamp de `inventory`, `.patch_storage` e dos arquivos afetados de cada home, mais o `oraInventory`.
+3. `opatch rollback -id <one-off> -oh <HOME> -silent` em cada home de origem, seguido de `lspatches`, `diff` contra o backup e o analyze de novo.
+4. Se o rollback só troca arquivo, sem binário nem relink, ele não para nada. Mas o bug volta até o switch: diga ao usuário o que evitar nesse intervalo.
+5. **Em RAC, a GI home fica travada pelo root** (`lib`, `.patch_storage`). O ensaio na GI falha com *"Destination directory ... is not writable"* e *"No read or write permission to ORACLE_HOME/.patch_storage"*, mesmo que a DB home passe. Isso não acontece no Oracle Restart.
+   - Para desfazer o one-off na GI é preciso destravar a home com 👤 root `$GH/crs/install/rootcrs.sh -prepatch`, que **para o stack do nó**. Depois vêm o rollback (👤 oracle) e o `rootcrs.sh -postpatch`, que trava a home e sobe o stack.
+   - É uma parada rolling, nó a nó. Planeje como janela antes da Preparação e aproveite a janela para outras ações que dependam de restart do nó.
 
 ## Fase 5 — Prepare-clone (sem downtime, dentro do tmux)
 
@@ -155,6 +188,7 @@ Validação (👤 oracle): `lspatches` nos clones. Deve aparecer a RU nova e os 
 - [ ] Data Guard saudável (👤 oracle `dgmgrl / "show configuration"`).
 - [ ] Primário: GoldenGate Integrated Extract parado de forma controlada no nó onde ele roda. Os mounts ACFS do nó vão cair.
 - [ ] Sessão no tmux.
+- [ ] HugePages: `HugePages_Total` ≥ a soma das SGAs de todas as instâncias que vão religar (Fase 1, item 7), com a tabela de pagesize de cada instância anotada como baseline.
 
 **Switch:**
 - [ ] 👤 root `opatchauto apply -switch-clone` (RAC: nó a nó, validando entre os nós).
@@ -163,6 +197,7 @@ Validação (👤 oracle): `lspatches` nos clones. Deve aparecer a RU nova e os 
 **Pós-switch:**
 - [ ] 👤 root: `olr.loc` apontando para a GI nova; `crsctl stat res -t` com tudo ONLINE.
 - [ ] 👤 oracle: `srvctl config database` com a home nova; `dgmgrl show configuration` SUCCESS, sem lag crescente.
+- [ ] 👤 oracle: no alert log de cada instância, a tabela `Supported system pagesize(s)` do novo startup com toda a SGA em 2048K (4K com só algumas páginas). Se houver SGA em 4K, investigue antes de encerrar a janela.
 - [ ] Primário: `dba_registry_sqlpatch` com a RU nova em SUCCESS; GoldenGate religado e replicando.
 - [ ] oratab, scripts de ambiente, ferramentas de monitoração e agendamentos que tenham o caminho da home fixo atualizados.
 
