@@ -111,17 +111,35 @@ mais de uma.
 ## Passo 2 — Documentação da versão
 
 **Leia `references/documentacao.md`.** Ele mapeia cada versão para o guia oficial e lista
-as páginas a abrir. Para cada página:
+as páginas a abrir.
 
-1. Confirme que a URL abre e é da versão certa (título e número da versão na página).
+**Fonte: cópia local ou web.** Se o usuário indicar um diretório com a documentação, ou se
+existir `~/oracle-docs/<versão>/` (ex.: `~/oracle-docs/19c/`), leia de lá primeiro, seguindo
+a seção "Cópia local" do `documentacao.md`: ela diz como reconhecer cada arquivo, como ler
+PDF grande sem abrir tudo e quando a cópia está velha demais. Sem cópia local, use a web.
+
+Para cada página, seja da web ou da cópia local:
+
+1. Confirme que é da versão certa pelo **conteúdo** (título e número da versão), não pela
+   URL nem pelo nome do arquivo.
 2. Extraia **literalmente** o que for requisito: tabelas de parâmetros de kernel e limits,
    lista de pacotes por distro, distros e kernels certificados, RAM, swap por faixa de RAM,
    `/tmp`, espaço em disco, nome do RPM preinstall, recomendação de THP e HugePages.
    Copie valores e unidades como estão. Não resuma tabela numérica.
-3. Guarde a URL de cada item para citar no relatório.
+3. Guarde a fonte de cada item para citar no relatório: a URL, ou o arquivo local com a
+   revisão do guia e a data da cópia.
 
-Sem ferramenta de leitura de páginas disponível: peça ao usuário para colar a seção ou
-marque o item como NÃO VERIFICADO.
+**Página que não abre** (bloqueio de proxy, ferramenta de leitura indisponível, erro HTTP):
+não suponha "sem internet"; diga o que falhou. Liste, numa tabela, título da página, URL
+tentada e erro, e ofereça as saídas, deixando o usuário escolher:
+- **baixar com `curl`** as URLs da tabela para `~/oracle-docs/<versão>/`, quando a falha
+  for só da ferramenta de leitura e a rede da máquina alcançar o site (só com aprovação;
+  ver "Cópia local"). Se o usuário já disse que não tem internet ou que o proxy bloqueia o
+  site, não ofereça: o `curl` passa pela mesma rede;
+- o usuário **salva as páginas** (HTML ou o PDF do guia) num diretório e indica o caminho,
+  que a skill lê na mesma conversa. No claude.ai, sem diretório local, ele anexa os arquivos;
+- o usuário **cola as seções**;
+- seguir com os itens como **NÃO VERIFICADO**.
 
 Pontos de leitura que a própria documentação estabelece e mudam a interpretação:
 - Os valores de kernel e limits da tabela são **mínimos**. Valor maior no servidor está ok.

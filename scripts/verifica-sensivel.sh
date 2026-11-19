@@ -107,10 +107,11 @@ else
   echo "       Hostnames sem domínio e nomes de cliente não serão detectados." >&2
 fi
 
-# Caminhos que nunca devem ir para o repositório: saídas de teste, chaves, relatórios.
+# Caminhos que nunca devem ir para o repositório: saídas de teste, chaves, relatórios e
+# documentação Oracle baixada (copyright).
 if [ "$modo" = --stage ] || [ "$modo" = --tudo ]; then
   { [ "$modo" = --stage ] && git diff --cached --name-only --diff-filter=ACMR || git ls-files; } \
-    | grep -iE '(-workspace/|(^|/)outputs/|evals/results/|\.(pem|key|p12|pfx)$|(^|/)id_(rsa|ecdsa|ed25519)|(^|/)relatorios?/|\.env$|(^|/)proibidos\.txt$)' \
+    | grep -iE '(-workspace/|(^|/)outputs/|evals/results/|\.(pem|key|p12|pfx)$|(^|/)id_(rsa|ecdsa|ed25519)|(^|/)relatorios?/|\.env$|(^|/)proibidos\.txt$|(^|/)oracle-docs/|\.pdf$|_files/)' \
     | while IFS= read -r p; do printf '%s\t%s\t%s\n' "(nome do arquivo)" "caminho proibido" "$p"; done >> "$ACHADOS"
 fi
 

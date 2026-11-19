@@ -144,6 +144,51 @@ Vem da documentação da versão. Já visto nas fontes oficiais:
 
 Para 21c, confirmar na página do RPM preinstall do guia 21c antes de checar.
 
+## Cópia local
+
+Para quando a máquina onde o Claude roda não alcança `docs.oracle.com` (proxy, firewall)
+ou a ferramenta de leitura de páginas não está disponível.
+
+**Onde fica.** O diretório que o usuário indicar, ou o padrão `~/oracle-docs/<versão>/`
+(`19c`, `21c`, `26ai`; para "23ai", use `26ai`). Nunca dentro de um repositório git: a
+documentação da Oracle tem copyright e não pode ir para repositório público. Se o caminho
+indicado estiver num repositório (`git -C <dir> rev-parse --is-inside-work-tree`), avise e
+sugira mover.
+
+**Formatos aceitos.**
+- **HTML** salvo pelo navegador ("Salvar como"), uma página por arquivo. É o mais leve.
+- **PDF** do guia inteiro (centenas de páginas). Não leia o arquivo todo: localize a seção
+  pelo índice do PDF ou por busca de texto (`pdftotext -layout <arq> - | grep -n
+  '<título>'`, se o `pdftotext` existir) e leia só as páginas da seção.
+- Texto colado ou anexado pelo usuário vale igual, com a mesma conferência de versão.
+
+**Reconhecer cada arquivo.** Liste o diretório e, para cada arquivo, leia o começo:
+- confira título e versão **no conteúdo**, não no nome do arquivo;
+- arquivo de outra versão (ex.: guia 21c no diretório da 19c) **não é usado**: diga qual
+  arquivo e qual versão ele mostra;
+- ligue cada arquivo a um título da tabela "Páginas a abrir" e diga quais títulos ainda
+  faltam. Item sem arquivo continua NÃO VERIFICADO.
+
+**Idade da cópia.** Registre a revisão do guia (ex.: `E96432-53`, na capa do PDF ou no
+rodapé da página) e a data do arquivo (`stat -c %y`). Com mais de 6 meses, avise no
+relatório que pode existir revisão mais nova e, se a web estiver acessível, confira a
+revisão atual antes de concluir.
+
+**Baixar com `curl`** (só com aprovação do usuário). Quando a falha for só da ferramenta de
+leitura e a rede da máquina alcançar o site, ofereça baixar as URLs exatas da tabela de
+falhas:
+
+```bash
+mkdir -p ~/oracle-docs/<versão>
+curl -fsSL --max-time 30 -o ~/oracle-docs/<versão>/<nome>.html '<URL da tabela>'
+```
+
+Um arquivo por URL da tabela, sem seguir links nem varrer o site. Se o `curl` também
+falhar, a rede é que bloqueia: siga para "o usuário salva as páginas" ou NÃO VERIFICADO.
+
+**No relatório**, a fonte de cada item lido localmente fica assim:
+`<título da página> — cópia local: <arquivo>, revisão <rev>, arquivo de <data>`.
+
 ## Ferramentas oficiais de verificação
 
 `runInstaller -executePrereqs` (Database) e `cluvfy` (Grid/RAC). Sintaxe e opções: guia da

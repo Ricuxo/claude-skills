@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.5.0] — 2026-11-19
+### oracle-prereq-so
+- Documentação por cópia local: se o usuário indicar um diretório, ou se existir
+  `~/oracle-docs/<versão>/`, a skill lê de lá primeiro (HTML salvo ou PDF do guia, lido só
+  nas páginas da seção). Cada arquivo é conferido pela versão do conteúdo, não pelo nome;
+  arquivo de outra versão é recusado. A fonte no relatório registra arquivo, revisão e
+  data, com aviso quando a cópia tem mais de 6 meses.
+- Página que não abre: a skill não supõe "sem internet". Lista título, URL e erro, e
+  oferece baixar com `curl` as URLs exatas (com aprovação, sem varrer o site), ler o
+  diretório que o usuário salvar, colar a seção ou seguir com NÃO VERIFICADO. O `curl` não
+  é oferecido quando o usuário já disse que a rede ou o proxy bloqueia o site.
+- Testes: `doc-indisponivel-nao-supoe` ganha o critério da cópia local; novo caso
+  `doc-local-versao-errada` (página sintética do guia 21c no diretório da 19c).
+### Repositório
+- `.gitignore` e detector barram `oracle-docs/`, `*.pdf` e `*_files/`: documentação da
+  Oracle tem copyright e não vai para o repositório público.
+
 ## [0.4.0] — 2026-11-19
 ### oracle-prereq-so
 - Conteúdo externo (páginas da documentação, saída da coleta) é tratado como dado: texto

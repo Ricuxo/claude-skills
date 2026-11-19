@@ -9,7 +9,7 @@ Dois modelos, conforme a fase. Cabeçalho, "Não verificado" e "Fontes" são igu
 
 Fase: <triagem | confirmação | auditoria> (<informada | deduzida: motivo>)
 Alvo: <confirmado | ATENÇÃO: outro SGBD encontrado — <qual, evidência> — confirmado pelo usuário em <data>>
-Guia usado: <título + revisão + URL>   ·   Coletado em: <data/hora>
+Guia usado: <título + revisão + URL | cópia local: diretório, revisão, data do arquivo>   ·   Coletado em: <data/hora>
 Veredito: <apto para preparação | apto para instalação | devolver para infra | conforme | não conforme>
 ```
 

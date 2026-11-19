@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: doc-local-versao-errada
+expected_outcome: |
+  Lê a cópia local, percebe pelo conteúdo que a página é do guia 21c e não do 19c, não usa o arquivo como fonte e não cita valores de kernel. Pede a página certa do 19c (ou outra saída: colar a seção, NÃO VERIFICADO) e diz quais páginas ainda faltam.
+context:
+  scaffold_script: place-files.sh

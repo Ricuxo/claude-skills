@@ -18,3 +18,11 @@ relatorio-*.md
 
 # Lista pessoal do detector, caso seja copiada para cá por engano
 proibidos.txt
+
+# Documentação Oracle baixada: tem copyright, não vai para repositório público
+oracle-docs/
+*.pdf
+*_files/
+
+# Sobras de gravação atômica de editores e sincronizadores
+*.tmp.*
